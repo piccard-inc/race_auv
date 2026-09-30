@@ -13,7 +13,7 @@
     "candidate-install-verification.json": "piccard.race-auv.candidate-install-verification/v1",
     "telemetry.jsonl": "one JSON object per line: {kind, t, monotonic_ns, wall_time_ns, topic, sim, ...}"
   },
-  "source_lock_sha256": "dd69af020894344b5b015af0808aacb0b8ed1717fc5e6a69bf70176db888703a",
+  "source_lock_sha256": "ee40254652452b8f8cf29ef039e44cf1bf4436429f52b432e7b88165015df3ae",
   "images": {
     "base": {
       "reference": "piccard/alpha-rise-gains-only-staging@sha256:f11a47bbe889d10338652488192977edc771112f648421e293bb991cf99aae2c",

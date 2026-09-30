@@ -61,6 +61,22 @@ class RaceConformanceTests(unittest.TestCase):
                 with self.subTest(case=case["id"], layer="runtime"):
                     self.assertEqual(runtime_accepts(document), case["accept_runtime"])
 
+    def test_examples_are_accepted_by_the_schema_and_the_runtime(self):
+        for path in sorted((ROOT / "examples").glob("*.json")):
+            request = json.loads(path.read_text())
+            with self.subTest(example=path.name):
+                self.assertEqual([error.message for error in VALIDATOR.iter_errors(request)], [])
+                self.assertTrue(runtime_accepts(request))
+
+    def test_the_m3_default_is_the_m1_smoke_request_with_black_square_edge_tags(self):
+        m1 = json.loads((ROOT / "examples/m1-smoke-request.json").read_text())
+        m3 = json.loads((ROOT / "examples/m3-default-request.json").read_text())
+        self.assertEqual(m3["mission"]["apriltag_tag_size"], "black_square_edge")
+        self.assertEqual({key: m3[key] for key in ("gains", "horizon_s", "wall_timeout_s")},
+                         {key: m1[key] for key in ("gains", "horizon_s", "wall_timeout_s")})
+        self.assertEqual({key for key in m1["mission"] if m1["mission"][key] != m3["mission"][key]},
+                         {"mission_id", "question", "apriltag_tag_size"})
+
     def test_schema_limits_bounds_and_modes_match_the_runtime(self):
         defs = SCHEMA["$defs"]
         for axis, (low, high) in LIMITS.items():

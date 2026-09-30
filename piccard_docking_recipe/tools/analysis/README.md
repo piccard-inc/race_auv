@@ -193,8 +193,8 @@ dock point on each axis, and ±0.05 rad. At nominal gains M1 never enters it.
   there.
 - It reports the spread between the N repeats.
 
-The tests run on `fixtures/race-m1-8c47cbcc/`, the M1 staging trial (job 8c47cbcc), trimmed by
-`fixtures/trim_race_trial.py`:
+`test_race_m2_metrics.py` runs on synthetic trials. `test_race_m2_metrics_m1.py` runs on
+`fixtures/race-m1-8c47cbcc/`, the M1 staging trial (job 8c47cbcc), trimmed by `fixtures/trim_race_trial.py`:
 - only the rows and fields the tool and the isolation check's timing read, rounded to 1e-6 except `t` and `stamp`,
   and gzipped;
 - the JSON files verbatim;

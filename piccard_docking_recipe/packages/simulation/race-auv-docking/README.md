@@ -22,6 +22,7 @@ Tracking: piccard-inc/piccard-physical-ai#79 (milestone piccard-experiments #87)
 | `request-v1.schema.json` | The executor claim request: `gains`, `mission`, `horizon_s`, `wall_timeout_s`, `context`. |
 | `conformance-v1.json`, `test_conformance.py` | Accept/reject cases that the schema and the runtime validators must both agree on. |
 | `examples/m1-smoke-request.json` | The M1 smoke request. |
+| `examples/m3-default-request.json` | The M1 smoke request with `apriltag_tag_size` `black_square_edge`, the tag-size convention for M3 requests (#107). |
 | `campaigns/phase-r-a-20260928/` | The M2 Phase R-A pose missions and their derivation (#96). The jobs files come from `tools/campaigns/build_phase_r_campaign.py`; the metrics from `tools/analysis/race_m2_metrics.py`. |
 | `campaigns/tank-floor-v1.json` | The tank's interior floor and the AUV's footprint, from the pinned world_of_stonefish (`tools/campaigns/extract_tank_floor.py`). The builder checks every pose for 0.3 m of floor clearance with it (#102). |
 | `runtime/run_campaign_trial.sh` | Container entrypoint: install → verify → `run_trial.sh`. |

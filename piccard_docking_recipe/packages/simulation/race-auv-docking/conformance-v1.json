@@ -7,7 +7,7 @@
     },
     "recipe": {
       "path": "recipe-v1.json",
-      "sha256": "854eca7d7bf8cbf457cb3ecb9186d47bef7dd0f713b4853660acb7384f2b4528"
+      "sha256": "86591096051c1fac9ec8d535846b737b27af0dced362933686d528a6a011985d"
     }
   },
   "runtime_layer": "runtime/prepare_candidate.validate with the recipe's configured_output_limits and runtime/mission.validate_mission; null means the key is checked outside those validators",

@@ -1,0 +1,158 @@
+{
+  "gains": {
+    "flight": {
+      "u": {
+        "p": 30.0,
+        "i": 1.5,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -50,
+        "pid_max": 50
+      },
+      "v": {
+        "p": 5.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      },
+      "z": {
+        "p": 15.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -30,
+        "pid_max": 30
+      },
+      "roll": {
+        "p": 2.0,
+        "i": 0.1,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -10,
+        "pid_max": 10
+      },
+      "pitch": {
+        "p": 5.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -20,
+        "pid_max": 20
+      },
+      "yaw": {
+        "p": 4.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      }
+    },
+    "docking": {
+      "x": {
+        "p": 5.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      },
+      "y": {
+        "p": 5.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      },
+      "z": {
+        "p": 15.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -30,
+        "pid_max": 30
+      },
+      "roll": {
+        "p": 2.0,
+        "i": 0.1,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -10,
+        "pid_max": 10
+      },
+      "pitch": {
+        "p": 5.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -20,
+        "pid_max": 20
+      },
+      "yaw": {
+        "p": 4.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      }
+    }
+  },
+  "mission": {
+    "schema": "piccard.race-auv.pose-mission/v1",
+    "mission_id": "race-auv-docking-m3-default",
+    "question": "Does the pinned RACE stack reach direct_control and hold the AUV dock point 1.5 m in front of the station dock point for 60 s, with the AprilTag sizes read as the black-square edge?",
+    "frame_id": "world_ned",
+    "child_frame_id": "cg_link",
+    "seed": null,
+    "apriltag_tag_size": "black_square_edge",
+    "poses": [
+      {
+        "label": "dive",
+        "x_m": -0.325,
+        "y_m": 0.0,
+        "z_m": 3.78,
+        "roll_rad": 0.0,
+        "pitch_rad": 0.0,
+        "yaw_rad": 1.571,
+        "dwell_s": 40
+      },
+      {
+        "label": "approach",
+        "x_m": -0.326,
+        "y_m": 5.495,
+        "z_m": 3.78,
+        "roll_rad": 0.0,
+        "pitch_rad": 0.0,
+        "yaw_rad": 1.571,
+        "dwell_s": 200
+      },
+      {
+        "label": "hold_1p5m",
+        "x_m": -0.326,
+        "y_m": 5.495,
+        "z_m": 3.78,
+        "roll_rad": 0.0,
+        "pitch_rad": 0.0,
+        "yaw_rad": 1.571,
+        "dwell_s": 60
+      }
+    ]
+  },
+  "horizon_s": 330,
+  "wall_timeout_s": 480,
+  "context": {
+    "purpose": "M3 default request (piccard-inc/piccard-physical-ai#107): the M1 smoke request with apriltag_tag_size black_square_edge; not tuning",
+    "apriltag_tag_size": "black_square_edge, the black-region convention the SOS Lab confirmed: the trial output gets a CPU-detector config with every tag size x0.8 (0.12 m and 0.04 m); lab_configured (0.15 m and 0.05 m) stays available",
+    "gain_sources": {
+      "flight": "upstream race_auv da58963 config_sim.yaml flight mode, unchanged",
+      "docking.z/roll/pitch/yaw": "copied from the flight mode",
+      "docking.x/y": "Piccard nominal starting point (p 5, i 0.2, d 0, v 5, +/-15); not a tuned or lab-approved value"
+    },
+    "pose_derivation": "station dock point (Stonefish world 3.59, 0.325, 3.91) minus 1.5 m along x_W gives the AUV dock point; a level AUV heading north (yaw_W 0) then has cg_link at (1.695, 0.325, 3.78); in the controller's world_ned (x_C = -y_W, y_C = x_W + 3.8, yaw_C = yaw_W + 1.571) that is (-0.325, 5.495, 3.78), yaw 1.571",
+    "timing": "approach dwell 200 s: in the arm64 dev loop the nominal x/y gains overshot the 5.5 m approach to 0.83 m and needed about 100 s more to settle, so the 60 s hold starts after settling"
+  }
+}
