@@ -28,13 +28,22 @@ The repository files leave `bhv_direct_control` commented out and define no dire
 `runtime/prepare_candidate.py` edits the **container's copies** of three files and reads them back before the
 controller is enabled (`recipe-v1.json` → `fixed_execution.helm`):
 
-1. `race_auv_config/mvp_control_config/config_sim.yaml`: `control_modes.flight` is kept exactly (verified against
-   the pinned file at build time by `runtime/check_image.py`); a new `control_modes.docking` is added with x, y, z,
-   roll, pitch, yaw of `cg_link` in `world_ned`. Its z, roll, pitch and yaw PIDs and output limits are copies of the
-   flight gains; the docking x and y PIDs and limits come from the trial request (`gains.json`).
-2. `race_auv_config/mvp_mission_config/helm_sim.yaml`: a `direct_control` state (control mode `docking`,
-   transitions to and from `start` and `kill`) is added to the finite-state machine.
-3. `race_auv_bringup/config/bhv_params_sim.yaml`: `bhv_direct_control` (`helm/DirectControl`, priority 1) is added.
+1. `race_auv_config/mvp_control_config/config_sim.yaml`: `control_modes.flight` and a new `control_modes.docking`
+   are both written from the trial request's `gains.json` (`install()`). The campaign requests carry the upstream
+   flight values verbatim (the builder copies them from `examples/m1-smoke-request.json`, which is the pinned
+   `config_sim.yaml`), and set docking z, roll, pitch and yaw equal to flight; only the docking x and y PIDs and
+   output limits differ between trials. So "flight gains unchanged" holds by the content of every request, which
+   the trial records and reads back (`trial.json` → `gains_verified`), not by an install-time guard;
+   `runtime/check_image.py` checks only that the recipe's output limits equal the pinned file. The docking mode is
+   x, y, z, roll, pitch, yaw of `cg_link` in `world_ned`.
+2. `race_auv_config/mvp_mission_config/helm_sim.yaml` (`install_helm()`): a `direct_control` state is added to
+   the finite-state machine (control mode `docking`, transitions to `start` and `kill`; `start` and `kill` gain a
+   transition to it), and `behaviors.bhv_direct_control` is added with `plugin: helm/DirectControl` and
+   `priority: {direct_control: 1}`.
+3. `race_auv_bringup/config/bhv_params_sim.yaml`: `bhv_direct_control` gets its parameters,
+   `default_bhv_world_link: world_ned` and `default_bhv_child_link: cg_link`.
+
+The installer refuses to run if `direct_control` or `bhv_direct_control` is already present in either file.
 
 `runtime/collect_trial.py` then publishes `mvp_msgs/ControlProcess` set points on
 `/race_auv/mvp_helm/bhv_direct_control/desired_setpoints` at 1 Hz, enables the controller, changes the helm state to
@@ -57,4 +66,4 @@ and never navigates.
 - `tools/campaigns/`: mission and jobs-file builder, tank-floor extractor, tests
 - `tools/analysis/`: M2 metrics, recording-isolation check, onboard-load check, README
 
-Omitted: test fixtures that carry trial outputs, and one runtime test that depends on them.
+Omitted: test fixtures that carry trial outputs, and one runtime test that depends on them. Known limits of this hand-made first export: the tools resolve the package by its repository-relative path and do not run from this flattened layout, and `test_conformance.py`'s two source hashes no longer match the scrubbed `recipe-v1.json` and `source-lock-v1.json` (the private registry host was removed from both). A scripted re-export will fix the layout and refresh the hashes; the code itself is unchanged.
