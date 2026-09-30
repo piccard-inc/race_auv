@@ -1,0 +1,97 @@
+{
+  "interior_floor_triangles_world_m": [
+    [
+      [
+        4.5691,
+        -3.0516,
+        4.4868
+      ],
+      [
+        -4.5749,
+        -3.0444,
+        4.494
+      ],
+      [
+        4.5739,
+        3.0444,
+        4.4868
+      ]
+    ],
+    [
+      [
+        4.5739,
+        3.0444,
+        4.4868
+      ],
+      [
+        -4.5749,
+        -3.0444,
+        4.494
+      ],
+      [
+        -4.5701,
+        3.0516,
+        4.494
+      ]
+    ]
+  ],
+  "interior_xy_bounds_world_m": {
+    "x": [
+      -4.5749,
+      4.5739
+    ],
+    "y": [
+      -3.0516,
+      3.0516
+    ]
+  },
+  "issue": "piccard-inc/piccard-physical-ai#102",
+  "method": "tank: objects/ORL_Tank.obj placed by the scenario's world_transform (R = Rz Ry Rx); interior floor = the triangle first hit by a vertical ray at the vehicle's start position plus the triangles coplanar with it. vehicle: the Vehicle compound's external parts (physical origin, then compound_transform), level Vehicle frame = world NED; footprint and lowest point relative to the Base origin. Tool: tools/campaigns/extract_tank_floor.py",
+  "schema": "piccard.race-auv.tank-floor/v1",
+  "source": {
+    "files_sha256": {
+      "data/objects/ORL_Tank.obj": "3b089dc2108bbd0d9eab08b8e2507b10026a7e7cdbf8d1b2140cc64b566f5deb",
+      "data/parts/body/RACE_sim_Body.obj": "65689b1a8fa72cb6d80bc4aa1c7550c0502e43bcb2cdb23f703fb9a0cc8bd606",
+      "data/parts/others/RACE_sim_Couplink.obj": "3894b3f193914ad26539bbf538eaf368c75cf329c1269df6766b8eefb10fa0cb",
+      "data/parts/others/RACE_sim_LeftLeg.obj": "94fda536cf726b6c56088e0b4a509d59b003583fe6c3d995098ee8dd38e34291",
+      "data/parts/others/RACE_sim_RightLeg.obj": "45ad84284f3073417dc6271b604a710aa6c52db7ed138821ef97e606c84440e9",
+      "vehicles/race_auv.scn": "1c5fa67240fe7adaa187bf1bc4582b6762b826ed917a33c142a4a75f2e95df0e",
+      "world/race_auv_test.scn": "63aaad8698f97689f270d208f0243b65010787e75bb78ba3eb82975f52b8c434"
+    },
+    "world_of_stonefish": {
+      "archive_sha256": "d7c10d04a39ab7bcc1aa6a58d2a6e59a27319dfe9957f589271f9e9cdbf055d2",
+      "commit": "d51d59e77211a436a0c3617c30a80c36337cdbbc",
+      "repository": "https://github.com/GSO-soslab/world_of_stonefish"
+    }
+  },
+  "tank_world_transform": {
+    "rpy": [
+      -1.57,
+      0.0,
+      1.57
+    ],
+    "xyz": [
+      0.0,
+      0.0,
+      5.1
+    ]
+  },
+  "vehicle": {
+    "cg_link_behind_base_m": 0.7,
+    "footprint_base_m": {
+      "x": [
+        -1.2938,
+        0.0
+      ],
+      "y": [
+        -0.1788,
+        0.1788
+      ]
+    },
+    "lowest_point_below_base_m": 0.1799,
+    "start_xy_world_m": [
+      -3.1,
+      0.0
+    ]
+  }
+}

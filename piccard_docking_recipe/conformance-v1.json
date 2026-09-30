@@ -1,0 +1,624 @@
+{
+  "schema": "piccard.race-auv.conformance/v1",
+  "contract_sources": {
+    "request_schema": {
+      "path": "request-v1.schema.json",
+      "sha256": "ec789844f4eadf8073220f381002eafce0d27a178f3be23598f34d3c942e7b2c"
+    },
+    "recipe": {
+      "path": "recipe-v1.json",
+      "sha256": "854eca7d7bf8cbf457cb3ecb9186d47bef7dd0f713b4853660acb7384f2b4528"
+    }
+  },
+  "runtime_layer": "runtime/prepare_candidate.validate with the recipe's configured_output_limits and runtime/mission.validate_mission; null means the key is checked outside those validators",
+  "request": {
+    "base": {
+      "gains": {
+        "flight": {
+          "u": {
+            "p": 30.0,
+            "i": 1.5,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -50,
+            "pid_max": 50
+          },
+          "v": {
+            "p": 5.0,
+            "i": 0.2,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -15,
+            "pid_max": 15
+          },
+          "z": {
+            "p": 15.0,
+            "i": 1.0,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -30,
+            "pid_max": 30
+          },
+          "roll": {
+            "p": 2.0,
+            "i": 0.1,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -10,
+            "pid_max": 10
+          },
+          "pitch": {
+            "p": 5.0,
+            "i": 1.0,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -20,
+            "pid_max": 20
+          },
+          "yaw": {
+            "p": 4.0,
+            "i": 0.2,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -15,
+            "pid_max": 15
+          }
+        },
+        "docking": {
+          "x": {
+            "p": 5.0,
+            "i": 0.2,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -15,
+            "pid_max": 15
+          },
+          "y": {
+            "p": 5.0,
+            "i": 0.2,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -15,
+            "pid_max": 15
+          },
+          "z": {
+            "p": 15.0,
+            "i": 1.0,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -30,
+            "pid_max": 30
+          },
+          "roll": {
+            "p": 2.0,
+            "i": 0.1,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -10,
+            "pid_max": 10
+          },
+          "pitch": {
+            "p": 5.0,
+            "i": 1.0,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -20,
+            "pid_max": 20
+          },
+          "yaw": {
+            "p": 4.0,
+            "i": 0.2,
+            "d": 0.0,
+            "v": 5.0,
+            "pid_min": -15,
+            "pid_max": 15
+          }
+        }
+      },
+      "mission": {
+        "schema": "piccard.race-auv.pose-mission/v1",
+        "mission_id": "race-auv-docking-m1-smoke",
+        "question": "Does the pinned RACE stack reach direct_control and hold the AUV dock point 1.5 m in front of the station dock point for 60 s, with ground truth and tag detections recorded?",
+        "frame_id": "world_ned",
+        "child_frame_id": "cg_link",
+        "seed": null,
+        "apriltag_tag_size": "lab_configured",
+        "poses": [
+          {
+            "label": "dive",
+            "x_m": -0.325,
+            "y_m": 0.0,
+            "z_m": 3.78,
+            "roll_rad": 0.0,
+            "pitch_rad": 0.0,
+            "yaw_rad": 1.571,
+            "dwell_s": 40
+          },
+          {
+            "label": "approach",
+            "x_m": -0.326,
+            "y_m": 5.495,
+            "z_m": 3.78,
+            "roll_rad": 0.0,
+            "pitch_rad": 0.0,
+            "yaw_rad": 1.571,
+            "dwell_s": 200
+          },
+          {
+            "label": "hold_1p5m",
+            "x_m": -0.326,
+            "y_m": 5.495,
+            "z_m": 3.78,
+            "roll_rad": 0.0,
+            "pitch_rad": 0.0,
+            "yaw_rad": 1.571,
+            "dwell_s": 60
+          }
+        ]
+      },
+      "horizon_s": 330,
+      "wall_timeout_s": 480,
+      "context": {
+        "purpose": "M1 smoke (piccard-inc/piccard-physical-ai#79); not tuning",
+        "gain_sources": {
+          "flight": "upstream race_auv da58963 config_sim.yaml flight mode, unchanged",
+          "docking.z/roll/pitch/yaw": "copied from the flight mode",
+          "docking.x/y": "Piccard nominal starting point (p 5, i 0.2, d 0, v 5, +/-15); not a tuned or lab-approved value"
+        },
+        "pose_derivation": "station dock point (Stonefish world 3.59, 0.325, 3.91) minus 1.5 m along x_W gives the AUV dock point; a level AUV heading north (yaw_W 0) then has cg_link at (1.695, 0.325, 3.78); in the controller's world_ned (x_C = -y_W, y_C = x_W + 3.8, yaw_C = yaw_W + 1.571) that is (-0.325, 5.495, 3.78), yaw 1.571",
+        "timing": "approach dwell 200 s: in the arm64 dev loop the nominal x/y gains overshot the 5.5 m approach to 0.83 m and needed about 100 s more to settle, so the 60 s hold starts after settling"
+      }
+    },
+    "cases": [
+      {
+        "id": "m1_smoke_base",
+        "patch": [],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "black_square_edge_variant",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/apriltag_tag_size",
+            "value": "black_square_edge"
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "tag_size_defaults_to_lab_configured",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/mission/apriltag_tag_size"
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "docking_xy_request_limits",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/docking/x/pid_min",
+            "value": -40
+          },
+          {
+            "op": "replace",
+            "path": "/gains/docking/x/pid_max",
+            "value": 25
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "contact_pose_allowed",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/2/y_m",
+            "value": 7.39
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true,
+        "note": "no stand-off floor: a pose at the station is valid"
+      },
+      {
+        "id": "context_optional",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/context"
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": null
+      },
+      {
+        "id": "pose_outside_tank_y",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/y_m",
+            "value": 9.0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "flight_limit_changed",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/flight/z/pid_max",
+            "value": 31
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "docking_z_limit_changed",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/docking/z/pid_min",
+            "value": -29
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "docking_x_min_not_negative",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/docking/x/pid_min",
+            "value": 0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "docking_y_max_not_positive",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/docking/y/pid_max",
+            "value": 0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "docking_x_limit_absurd",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/docking/x/pid_max",
+            "value": 10000.5
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "negative_gain",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/docking/x/p",
+            "value": -1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "absurd_gain",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/flight/u/v",
+            "value": 10000.5
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "boolean_gain",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/gains/flight/yaw/i",
+            "value": true
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "unknown_mode",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/gains/teleop",
+            "value": {}
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "flight_has_x",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/gains/flight/x",
+            "value": {
+              "p": 5.0,
+              "i": 0.2,
+              "d": 0.0,
+              "v": 5.0,
+              "pid_min": -15,
+              "pid_max": 15
+            }
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "docking_missing_y",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/gains/docking/y"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "axis_extra_field",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/gains/docking/x/ff",
+            "value": 1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_outside_tank_x",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/x_m",
+            "value": 3.7
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_between_inner_and_outer_wall_x",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/x_m",
+            "value": 3.3
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_between_inner_and_outer_wall_y",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/y_m",
+            "value": 8.6
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_lowest_point_below_interior_floor",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/z_m",
+            "value": 4.35
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_at_interior_depth_limit",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/z_m",
+            "value": 4.3
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "pose_above_surface",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/z_m",
+            "value": -0.1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "yaw_out_of_range",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/yaw_rad",
+            "value": 3.2
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "dwell_too_short",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/0/dwell_s",
+            "value": 0.5
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_extra_field",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/mission/poses/0/speed_mps",
+            "value": 0.5
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "no_poses",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses",
+            "value": []
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "frame_not_world_ned",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/frame_id",
+            "value": "odom"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "seed_not_supported",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/seed",
+            "value": 1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "unknown_tag_size",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/apriltag_tag_size",
+            "value": "cuda_nominal"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "velocity_mission_rejected",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/schema",
+            "value": "piccard.race-auv.velocity-mission/v1"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "duplicate_pose_labels",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/poses/1/label",
+            "value": "dive"
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": false,
+        "note": "uniqueness is enforced by the runtime validator only"
+      },
+      {
+        "id": "horizon_zero",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/horizon_s",
+            "value": 0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": null
+      },
+      {
+        "id": "wall_timeout_too_long",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/wall_timeout_s",
+            "value": 3601
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": null
+      },
+      {
+        "id": "unknown_request_key",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/protocol",
+            "value": "x"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,461 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "piccard.race-auv.docking-request/v1",
+  "title": "RACE AUV docking trial request (executor claim request for race-auv-docking/v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gains",
+    "mission",
+    "horizon_s",
+    "wall_timeout_s"
+  ],
+  "properties": {
+    "gains": {
+      "$ref": "#/$defs/gains"
+    },
+    "mission": {
+      "$ref": "#/$defs/mission"
+    },
+    "horizon_s": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "wall_timeout_s": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "context": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "gain": {
+      "allOf": [
+        {
+          "type": "number"
+        },
+        {
+          "minimum": 0,
+          "maximum": 10000
+        }
+      ],
+      "$comment": "Well-formedness guard only: finite, non-negative, below an absurdity ceiling."
+    },
+    "axis_u": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "const": -50
+        },
+        "pid_max": {
+          "const": 50
+        }
+      }
+    },
+    "axis_v": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "const": -15
+        },
+        "pid_max": {
+          "const": 15
+        }
+      }
+    },
+    "axis_z": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "const": -30
+        },
+        "pid_max": {
+          "const": 30
+        }
+      }
+    },
+    "axis_roll": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "const": -10
+        },
+        "pid_max": {
+          "const": 10
+        }
+      }
+    },
+    "axis_pitch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "const": -20
+        },
+        "pid_max": {
+          "const": 20
+        }
+      }
+    },
+    "axis_yaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "const": -15
+        },
+        "pid_max": {
+          "const": 15
+        }
+      }
+    },
+    "axis_free_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p",
+        "i",
+        "d",
+        "v",
+        "pid_min",
+        "pid_max"
+      ],
+      "properties": {
+        "p": {
+          "$ref": "#/$defs/gain"
+        },
+        "i": {
+          "$ref": "#/$defs/gain"
+        },
+        "d": {
+          "$ref": "#/$defs/gain"
+        },
+        "v": {
+          "$ref": "#/$defs/gain"
+        },
+        "pid_min": {
+          "type": "number",
+          "minimum": -10000,
+          "exclusiveMaximum": 0
+        },
+        "pid_max": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        }
+      },
+      "$comment": "Docking x/y: no upstream constant exists; the request supplies the output limits (pid_min < 0 < pid_max). The runtime has no x/y defaults."
+    },
+    "gains": {
+      "$comment": "piccard.race-auv.gains/v1: two modes. Limits other than docking x/y must equal the pinned config_sim.yaml flight limits.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flight",
+        "docking"
+      ],
+      "properties": {
+        "flight": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "u",
+            "v",
+            "z",
+            "roll",
+            "pitch",
+            "yaw"
+          ],
+          "properties": {
+            "u": {
+              "$ref": "#/$defs/axis_u"
+            },
+            "v": {
+              "$ref": "#/$defs/axis_v"
+            },
+            "z": {
+              "$ref": "#/$defs/axis_z"
+            },
+            "roll": {
+              "$ref": "#/$defs/axis_roll"
+            },
+            "pitch": {
+              "$ref": "#/$defs/axis_pitch"
+            },
+            "yaw": {
+              "$ref": "#/$defs/axis_yaw"
+            }
+          }
+        },
+        "docking": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "z",
+            "roll",
+            "pitch",
+            "yaw"
+          ],
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/axis_free_limits"
+            },
+            "y": {
+              "$ref": "#/$defs/axis_free_limits"
+            },
+            "z": {
+              "$ref": "#/$defs/axis_z"
+            },
+            "roll": {
+              "$ref": "#/$defs/axis_roll"
+            },
+            "pitch": {
+              "$ref": "#/$defs/axis_pitch"
+            },
+            "yaw": {
+              "$ref": "#/$defs/axis_yaw"
+            }
+          }
+        }
+      }
+    },
+    "pose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "x_m",
+        "y_m",
+        "z_m",
+        "roll_rad",
+        "pitch_rad",
+        "yaw_rad",
+        "dwell_s"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "x_m": {
+          "type": "number",
+          "minimum": -3.04,
+          "maximum": 3.04
+        },
+        "y_m": {
+          "type": "number",
+          "minimum": -0.77,
+          "maximum": 8.36
+        },
+        "z_m": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 4.3
+        },
+        "roll_rad": {
+          "type": "number",
+          "minimum": -1.5707963267948966,
+          "maximum": 1.5707963267948966
+        },
+        "pitch_rad": {
+          "type": "number",
+          "minimum": -1.5707963267948966,
+          "maximum": 1.5707963267948966
+        },
+        "yaw_rad": {
+          "type": "number",
+          "minimum": -3.141592653589793,
+          "maximum": 3.141592653589793
+        },
+        "dwell_s": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 900
+        }
+      }
+    },
+    "mission": {
+      "$comment": "piccard.race-auv.pose-mission/v1: cg_link poses in the controller's dead-reckoned race_auv/world_ned, which is the Stonefish world rotated +90 deg about z with its origin at base_link's start: x_C = -y_W, y_C = x_W + 3.8, z_C = depth, yaw_C = yaw_W + 1.571. Labels must be unique (checked by the runtime). Pose bounds: cg_link inside the tank's inner box and the vehicle's lowest point (0.18 m below cg_link) above its floor (piccard-physical-ai#104). No stand-off floor: poses may put the AUV in contact.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "mission_id",
+        "question",
+        "frame_id",
+        "child_frame_id",
+        "poses",
+        "seed"
+      ],
+      "properties": {
+        "schema": {
+          "const": "piccard.race-auv.pose-mission/v1"
+        },
+        "mission_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "frame_id": {
+          "const": "world_ned"
+        },
+        "child_frame_id": {
+          "const": "cg_link"
+        },
+        "poses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/pose"
+          }
+        },
+        "seed": {
+          "type": "null"
+        },
+        "apriltag_tag_size": {
+          "enum": [
+            "lab_configured",
+            "black_square_edge"
+          ],
+          "$comment": "lab_configured (default) reproduces the lab detector config (0.15/0.05 m); black_square_edge installs the corrected CPU-detector variant (0.12/0.04 m)."
+        }
+      }
+    }
+  }
+}

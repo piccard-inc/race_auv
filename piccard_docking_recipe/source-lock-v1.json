@@ -1,0 +1,75 @@
+{
+  "schema": "piccard.race-auv.source-lock/v1",
+  "recorded_at": "2026-09-28T00:00:00Z",
+  "target": {
+    "os": "Ubuntu 24.04",
+    "ros_distribution": "jazzy",
+    "production_architecture": "linux/amd64",
+    "development_architecture": "linux/arm64 (local dev loop only, base rebuilt from the same RISE Dockerfile)",
+    "base_image": "piccard/alpha-rise-gains-only-staging@sha256:f11a47bbe889d10338652488192977edc771112f648421e293bb991cf99aae2c",
+    "base_image_contents": "RISE base: Stonefish 7d52673, stonefish_ros2 a7c9be9, mvp_msgs 7aa616f, mvp_control 6cfea2d, mvp_mission 84cce53, mvp_utilities 0c475d3 and world_of_stonefish 55139d4 in /opt/ros2_ws (see packages/simulation/alpha-rise-gains-only/source-lock-v1.json)",
+    "overlay_workspace": "/opt/race_ws"
+  },
+  "sources": [
+    {
+      "name": "race_auv",
+      "repository": "https://github.com/piccard-inc/race_auv",
+      "commit": "da58963c048228856dfdd5917da21a14edfa1985",
+      "archive_sha256": "59e80dfd1238314ec31e0b9979b6209883ed0b6590e3c5f541aba31cc31316fe",
+      "workspace_path": "src/race_auv",
+      "license_observation": "one package manifest states GPLv3; three say 'TODO: License declaration'",
+      "build_changes": "real-vehicle configuration removed by runtime/sanitize_seed.py"
+    },
+    {
+      "name": "race_auv_sim",
+      "repository": "https://github.com/GSO-soslab/race_auv_sim",
+      "commit": "3601a30f49c7b8ddac2845c41c99af8af92c0e65",
+      "archive_sha256": "7d8091d3776198ef0d5b5b07cb0345e4713ee6950adbb37a8724bc7f21eaa177",
+      "workspace_path": "src/race_auv/race_auv_sim",
+      "license_observation": "not reviewed"
+    },
+    {
+      "name": "race_auv_perception",
+      "repository": "https://github.com/GSO-soslab/race_auv_perception",
+      "commit": "5944d5a6ebd44601bcc5579e91b82d5d1b3735cb",
+      "archive_sha256": "cfb07acd3ff3c288c46f15362993e6955d1f86e11cc0f26896371f91e701cbd4",
+      "workspace_path": "src/race_auv/race_auv_perception",
+      "license_observation": "package manifests state Apache-2.0 and MIT",
+      "build_changes": "race_auv_apriltag_cuda COLCON_IGNOREd; third_party (isaac_ros_nitros) and scripts removed; the cuAprilTags path is never built"
+    },
+    {
+      "name": "race_station",
+      "repository": "https://github.com/GSO-soslab/race_station",
+      "commit": "100bc5a7ac253172b527c036d637da5482eaf0f3",
+      "archive_sha256": "a29539a491725de026a70ba85e4c0aca0fe22c03938f62d6039c98bbfbe00ee2",
+      "workspace_path": "src/race_station",
+      "license_observation": "one package manifest states GPLv3; two say 'TODO: License declaration'",
+      "build_changes": "empty top-level race_station package COLCON_IGNOREd in this build only"
+    },
+    {
+      "name": "world_of_stonefish",
+      "repository": "https://github.com/GSO-soslab/world_of_stonefish",
+      "commit": "d51d59e77211a436a0c3617c30a80c36337cdbbc",
+      "archive_sha256": "d7c10d04a39ab7bcc1aa6a58d2a6e59a27319dfe9957f589271f9e9cdbf055d2",
+      "workspace_path": "src/world_of_stonefish",
+      "license_observation": "package manifest says 'TODO: License declaration'",
+      "build_changes": "none; shadows the base image's 55139d4 copy (asserted at build, recorded per trial)"
+    },
+    {
+      "name": "apriltag",
+      "repository": "https://github.com/AprilRobotics/apriltag",
+      "commit": "dc6316dc37520e56819d64741b54a41b50c92866",
+      "release": "master commit 2026-01-08 'add python wrap for estimate_tag_pose' (after v3.4.5)",
+      "archive_sha256": "34ac49fb753e85bd611c1cf9852622e8b4577c6ebdc7c167efe1bc353fe13b8b",
+      "workspace_path": "/opt/source/apriltag (installed to /usr/local)",
+      "license_observation": "BSD-2-Clause",
+      "build_changes": "none; built for the system Python 3.12. race_auv_camera_pkg's python backend calls apriltag.estimate_tag_pose(detection, size, fx, fy, cx, cy), which v3.4.5 lacks (every detection then falls back to an identity pose, as race_auv_camera_pkg/Jetson.md warns); the image build solves a pose on the pinned tag texture"
+    }
+  ],
+  "apt_additions": [
+    "ros-jazzy-vision-msgs",
+    "python3-scipy",
+    "rosdep keys of the overlay: all resolved by the base image (including ros-jazzy-rviz2, declared by race_auv_bringup, never launched); the arm64 dev build installed nothing further"
+  ],
+  "rights_status": "review_required_before_redistribution_or_commercial_packaging"
+}
