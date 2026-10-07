@@ -1,10 +1,14 @@
 {
   "schema": "piccard.experiment-recipe-descriptor/v1",
   "recipe_id": "race-auv-docking/v1",
+  "controller_variant": "upstream",
   "status": "source_complete_native_unqualified",
   "request_schema": "piccard.race-auv.docking-request/v1",
   "gains_schema": "piccard.race-auv.gains/v1",
-  "mission_schema": "piccard.race-auv.pose-mission/v1",
+  "mission_schemas": [
+    "piccard.race-auv.pose-mission/v1",
+    "piccard.race-auv.planner-mission/v1"
+  ],
   "artifact_schemas": {
     "trial.json": "piccard.race-auv.trial/v1",
     "docking.json": "piccard.race-auv.docking/v1",
@@ -164,6 +168,22 @@
       "installed_in": "the trial container's copies of helm_sim.yaml and bhv_params_sim.yaml, not upstream"
     },
     "setpoints": "the collector publishes mvp_msgs/ControlProcess on /race_auv/mvp_helm/bhv_direct_control/desired_setpoints at 1 Hz; each pose is held for dwell_s",
+    "planner": {
+      "applies_to": "piccard.race-auv.planner-mission/v1 (M3, piccard-physical-ai#109)",
+      "node": "/piccard_planner (runtime/planner_fused_dock.py, its own process group)",
+      "inputs": [
+        "/tf and /tf_static, looked up only for race_auv/world_ned->race_auv/base_link (EKF), race_auv/base_link->race_station/dock_point (AprilTag fuser), race_auv/base_link->race_auv/auv_dock_point and race_auv/base_link->race_auv/cg_link (static)",
+        "/race_auv/odometry/filtered (age gate)"
+      ],
+      "output": "mvp_msgs/ControlProcess on /race_auv/mvp_helm/bhv_direct_control/desired_setpoints, cg_link in race_auv/world_ned; JSON state per tick on /piccard/planner/state",
+      "estimate": "a level station at a heading, and its dock point, in race_auv/world_ned. The fuser's three forward-camera tags lie on the station's vertical centreline, so its yaw is unconstrained with all three (M3-0: sd 35-44 deg at 1.5 m). Heading: the circular median of the fused heading over heading_window_s, the window filling from the fallback pose's dwell (the planner observes while it waits), then held from the second stage on. At the final stage's first fresh tick (protocol v1.2) it is replaced once by the circular median of the fresh fused headings of the stage before it within heading_window_s (at 0.3 m tags 541 and 558 both solve); with fewer than 5 fresh samples the held heading is kept; held from then on either way, and the yaw set point steps to it once at that stage start. State records carry heading_rehold (t, samples, applied, previous, heading); trial.json's planner block keeps it with received_t. Dock point: the fused pose's image of tag_pivot_m minus the pivot rotated by the level station at the heading, low-passed with estimate_filter_s. A tick is stale and missing data when an input is missing or older than max_estimate_age_s (age), or when the fused TF's stamp advances but its transform stays bit-identical for longer than max_frozen_estimate_s (frozen): the set point holds, and the tick neither ends a stage nor restarts the settle or at-set-point clock",
+      "tag_pivot": "tag_pivot_m is station construction: the centroid, in the station dock frame, of the tags race_auv_bringup config/simulation/apriltag.yaml configures for cam_front, positioned by the station URDF it names (runtime/tag_pivot.py; 0.456667, 0, 0.22 m at the source lock). The collector derives it at trial start and fails closed (tag_pivot_mismatch, tag_pivot_underivable) if the mission's value differs by more than 1 mm",
+      "stages": "the stage target places the AUV dock point stand-off s behind the station estimate and approach_clearance_m above it, in every stage (protocol v1.3: the legs clear the station frame's rails; the vertical error is around it). each stand-off s but the last ends once the fused error has been within the band for settle_s: band_m along, vertical_band_m vertical (protocol v1.2; band_m in the final stage), band_rad in heading, band_m + s * band_rad lateral (the lateral target error is s times the station heading's estimate error); the last lasts final_stage_s, then the planner reports complete and holds",
+      "set_points": "discrete steps, because mvp_control 6cfea2d zeroes an axis's integral whenever its set point changes: x, y and yaw at a stage start, each only past its deadband (setpoint_deadband_m, _rad); then, after settle_s with cg_link within band_m of the set point on x and y and within vertical_band_m on z (protocol v1.3) and a fresh fused error still outside the band, every axis it is outside on, each only past its deadband (v1.3; each deadband at most its band, checked at validation). In the final stage (protocol v1.2) x and y follow the live goal, with no settle wait; yaw keeps the stage start's and depth is kept. From protocol v1.4 each world axis re-targets on its own, past final_deadband_m (the lateral one throughout), because mvp_control zeroes an axis's integral on any change of its set point. From protocol v1.5 the along axis (the world axis closer to the approach) approaches from the stage start, re-targeted only when its goal is past final_along_deadband_m from the held value and final_along_interval_s has passed since its last change (the stage start counts as one); when the fused along error comes within final_arrival_m of the goal on the approach's side it is re-issued at the goal once, zeroing the approach's integral windup, and then follows the goal past final_deadband_m; a fused along error past final_along_deadband_m for final_reapproach_s starts a new approach (v1.4: the along axis re-targeted on the fused along error past final_along_deadband_m and the interval). The command walks to every stage's held goal and every final-stage re-target (protocol v1.1): the x/y set point moves from the last command at most speed_cap_mps and lands exactly, yaw is the goal's from the stage start, depth is kept, and the refinement steps are not walked and wait until the walk has landed",
+      "handover": "the collector flies fallback_pose like a pose, calls /piccard_planner/start (std_srvs/Trigger), keeps the fallback set point until the planner's first command, then stops publishing",
+      "audit": "consumption audit planner_inputs: subscriptions within /tf, /tf_static and the EKF odometry, TF lookups within the four edges above; otherwise planner_reads_other_inputs fails the trial",
+      "record": "trial.json planner: node, parameters, parameters_sha256 (JSON, sorted keys, no spaces), stages, complete, stale_intervals (from_t, to_t, reason age or frozen), tag_pivot (mission, derived, max_difference_m, ok), setpoint_steps, heading_rehold, approach_clearance_m (v1.3; each state record's goal carries it too); telemetry kind planner per tick"
+    },
     "ground_truth": {
       "scope": "scoring only",
       "sources": [
@@ -208,11 +228,11 @@
       }
     }
   },
-  "allowed_variation": "P/I/D/V of every flight and docking axis; docking x/y output limits; the pose mission; the declared AprilTag tag-size variant",
+  "allowed_variation": "P/I/D/V of every flight and docking axis; docking x/y output limits; the pose mission, or the planner mission's fallback pose and planner parameters; the declared AprilTag tag-size variant",
   "variants": {
     "apriltag_tag_size": {
-      "lab_configured": "default; the lab detector config (tag36h11 0.15 m and 0.05 m)",
-      "black_square_edge": "installs a corrected CPU-detector config (0.12 m and 0.04 m) in the trial output; recorded in candidate.json and trial.json; upstream files unchanged"
+      "lab_configured": "default for pose missions; the lab detector config (tag36h11 0.15 m and 0.05 m)",
+      "black_square_edge": "default for planner missions; installs a corrected CPU-detector config (0.12 m and 0.04 m) in the trial output; recorded in candidate.json and trial.json; upstream files unchanged"
     }
   },
   "notes": {
@@ -261,6 +281,51 @@
       ],
       "fused_dock_point_tf_samples": 127,
       "process_cleanup_verified": true
+    },
+    "m3_planner": {
+      "status": "development evidence only: no claim, nothing scored; the M3-0 claim is the staging run's",
+      "request": "examples/m3-planner-request.json (the values proposed on piccard-experiments#88), p10 gains, M1's dive as the fallback pose, horizon 900 s",
+      "estimate_rate": "cam_front renders at about 0.75 Hz and the fuser publishes at 1.3-2.8 Hz under host load 5-19 (the L40S: about 7 Hz); the fuser repeats its pose between camera frames",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "the full fused orientation placed the targets: the fused pitch (sd 5-20 deg at 4-8 m) swung the 3 m depth target by 1.6 m",
+          "change": "a level approach axis from the heading only, low-passed (estimate_filter_s)"
+        },
+        {
+          "attempt": 2,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "with the fuser at 1.3 Hz, stale ticks restarted the settle clock",
+          "change": "a stale tick is missing data: it holds the set point and touches no clock"
+        },
+        {
+          "attempt": 3,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "every axis changed on every tick; mvp_control zeroes an axis's integral at each change, so the depth integral stayed near 0 and the AUV 0.85-0.95 m shallow",
+          "change": "set-point deadbands"
+        },
+        {
+          "attempt": 4,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "the goal's noise at 3 m (sd 2-5 cm) beat the 2 cm deadband: 101 depth steps (x 201, y 73) in the 132 s from the handover to 180 s, the AUV about 0.9 m shallow",
+          "change": "discrete set-point steps: x, y, yaw at a stage start, then one refinement on arrival"
+        },
+        {
+          "attempt": 5,
+          "status": "budget_censored",
+          "finding": "the depth integral held (14-21 on the 7 to 3 m approach); its one depth step, +2.6 cm at 111.6 s, zeroed it: 0.51 m shallow at +23 s, back within 5 cm after 54 s. Stage 0 then sat at 0.197 m along with no further step possible. From about 260 s a simulator fault froze the camera image (bit-identical detections under fresh stamps, passing the age gate) and ran the EKF away (a phantom 5.3 m/s for 70 s)",
+          "change": "steps after settle_s at the set point on the out-of-band axes only; max_frozen_estimate_s"
+        },
+        {
+          "attempt": 6,
+          "status": "budget_censored",
+          "finding": "handover at 48.0 s; the x/y integrals wound up to about 3.5 on the approach and carried the AUV 0.23 m past its set point for about 120 s; then 9 refinements between 277 and 513 s (x, y, yaw only: no depth step, the depth integral 13.72-14.00 throughout). Stage 0 did not settle: under a flat 5 cm band the lateral error (sd 7-19 cm) was never inside for 10 s. Its cause is the fused heading at 3 m: filtered sd 1.1-3.2 deg per 20 s, and fused minus true heading sd 0.070 rad (p90 0.121), half of the line-of-sight bearing leaking in (slope -0.53, r -0.64); fused minus true lateral sd 0.24 m. At about 645 s the attempt-5 fault recurred; the frozen guard marked 873 ticks stale from 662.8 s and the planner held its set point",
+          "change": "the lateral band widens with the stand-off (band_m + s * band_rad); this change came after attempt 6"
+        }
+      ],
+      "audit": "consumption_audit problems [] before the mission and at the end in every attempt; planner_inputs: subscriptions /race_auv/odometry/filtered, /tf and /tf_static, and exactly the four TF lookups; the reported parameter hash matched",
+      "not_reached": "no attempt left stage 0 (3 m): the 1.5 m and 0.3 m stages, the final ramp, closure and contact are untested in the dev loop"
     },
     "note": "development evidence only; the production e2e trial runs on linux/amd64 with the NVIDIA Xorg display"
   },

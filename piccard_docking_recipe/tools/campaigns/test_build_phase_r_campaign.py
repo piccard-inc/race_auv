@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import importlib.util
 import io
@@ -26,8 +27,8 @@ def load(name: str, path: Path):
 builder = load("build_phase_r_campaign", HERE / "build_phase_r_campaign.py")
 extractor = load("extract_tank_floor", HERE / "extract_tank_floor.py")
 runtime_mission = load("race_mission", ROOT / "packages/simulation/race-auv-docking/runtime/mission.py")
-TRIAL_ID = re.compile(r"^pr-(a0|a1|ho|a2|b)-(n|p2p5|p10|i0|i0p5|v10|v20)-(1step|staged|lateral|depth|contact)"
-                      r"(-[a-z]+)?-r\d$")
+TRIAL_ID = re.compile(r"^pr-(a0|a1|ho|a2|b|a0b|a0c|ho2|m30|m3a|m3b)-(n|p2p5|p10|i0|i0p5|v10|v20)-"
+                      r"(1step|staged|lateral|depth|depth2|contact|planner)(-[a-z0-9]+)?-r\d$")
 STAGES = {"a0": None, "a1": None, "holdout": "v10", "a2": None, "b": "v10"}
 
 
@@ -274,6 +275,19 @@ class BuilderTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             builder.build("a0c", None)
 
+    def test_the_follow_up_stages_sizes_trial_ids_and_horizons(self):
+        """#102's stages (a0b, holdout2, a0c) under the same trial-id grammar and horizon rule."""
+        seen = set()
+        for stage, count in {"a0b": 12, "holdout2": 2, "a0c": 2}.items():
+            document = builder.build(stage, "p10")
+            self.assertEqual(len(document["jobs"]), count, stage)
+            self.assertEqual(document["wall_timeout_s"], document["horizon_s"] + 150)
+            self.assertEqual(document["horizon_s"], max(dwell(item["mission"]) for item in document["jobs"]) + 30)
+            for item in document["jobs"]:
+                self.assertRegex(item["trial_id"], TRIAL_ID)
+                self.assertNotIn(item["trial_id"], seen)
+                seen.add(item["trial_id"])
+
     def test_cli_writes_to_stdout_and_requires_a_stage(self):
         with mock.patch("sys.stdout", new_callable=io.StringIO) as stdout, \
                 mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
@@ -283,6 +297,111 @@ class BuilderTests(unittest.TestCase):
                       stderr.getvalue())
         with mock.patch("sys.stderr", new_callable=io.StringIO), self.assertRaises(SystemExit):
             builder.main([])
+
+
+class M3Tests(unittest.TestCase):
+    """M3 (#109): the planner mission and the stages m3-0, m3-a and m3-b."""
+
+    def test_stage_sizes_trial_ids_and_the_fixed_horizon(self):
+        expected = {"m3-0": ["pr-m30-p10-planner-r1"],
+                    "m3-a": ["pr-m3a-p10-planner-r1", "pr-m3a-p10-contact-r1", "pr-m3a-p10-planner-r2",
+                             "pr-m3a-p10-contact-r2"],
+                    "m3-b": ["pr-m3b-p10-planner-labtag-r1", "pr-m3b-p10-planner-cap0p05-r1",
+                             "pr-m3b-p10-planner-cap0p2-r1", "pr-m3b-n-planner-r1"]}
+        for stage, ids in expected.items():
+            document = builder.build(stage)
+            self.assertEqual([item["trial_id"] for item in document["jobs"]], ids)
+            self.assertEqual((document["horizon_s"], document["wall_timeout_s"]), (1800, 1950))
+            for item in document["jobs"]:
+                self.assertRegex(item["trial_id"], TRIAL_ID)
+                runtime_mission.validate_mission(item["mission"])
+                context = item["context"]
+                self.assertEqual((context["campaign_id"], context["stage"]), ("m3-planner", stage))
+                self.assertIn("piccard-inc/piccard-experiments#88", context["protocol"])
+                self.assertEqual(context["protocol_version"], "v1.5")
+                self.assertEqual(context["mission_sha256"],
+                                 hashlib.sha256(builder.mission_bytes(item["mission"])).hexdigest())
+                self.assertEqual(context["arm"], "control" if context["mission_key"] == "contact" else "planner")
+
+    def test_the_planner_mission_is_the_example_with_black_square_edge(self):
+        example = json.loads(builder.PLANNER_EXAMPLE.read_text())
+        mission = builder.planner_mission()
+        self.assertEqual(mission, example["mission"])
+        self.assertEqual(mission["apriltag_tag_size"], "black_square_edge")
+        self.assertEqual(mission["fallback_pose"], builder.dive())  # M1's dive, as every M2 mission starts
+        self.assertEqual(example["gains"], builder.gains_for("p10"))
+
+    def test_arms_differ_only_where_the_protocol_says(self):
+        planner, control = [item["mission"] for item in builder.build("m3-a")["jobs"][:2]]
+        self.assertEqual(control["poses"], builder.mission_document("contact")["poses"])
+        self.assertEqual(control["apriltag_tag_size"], "black_square_edge")
+        self.assertEqual([s for s in planner["planner"]["standoffs_m"]], [3.0, 1.5, 0.3, 0.0])
+        self.assertEqual([p["label"] for p in control["poses"]],
+                         ["dive", "approach_3m", "approach_1p5m", "approach_0p3m", "contact"])
+        b = {item["context"]["role"]: item for item in builder.build("m3-b")["jobs"]}
+        base = builder.planner_mission()
+        for role, (key, value) in {"tag_size_lab_configured": ("apriltag_tag_size", "lab_configured"),
+                                   "speed_cap_0p05": ("speed_cap_mps", 0.05),
+                                   "speed_cap_0p2": ("speed_cap_mps", 0.2)}.items():
+            mission = b[role]["mission"]
+            changed = mission["apriltag_tag_size"] if key == "apriltag_tag_size" else mission["planner"][key]
+            self.assertEqual(changed, value)
+            self.assertEqual({**mission, "mission_id": base["mission_id"], "apriltag_tag_size": base["apriltag_tag_size"],
+                              "planner": {**mission["planner"], "speed_cap_mps": base["planner"]["speed_cap_mps"]}}, base)
+        self.assertEqual(b["nominal_gains"]["gains"], builder.gains_for("n"))
+        self.assertEqual(b["nominal_gains"]["mission"], base)
+
+    def test_the_floor_check_covers_the_fallback_and_every_stand_off(self):
+        mission = builder.planner_mission()
+        labels = [p["label"] for p in builder.floor_poses(mission)]
+        self.assertEqual(labels, ["dive", "standoff_3m", "standoff_1.5m", "standoff_0.3m", "standoff_0m"])
+        self.assertEqual(builder.floor_poses(mission)[-1], {**builder.pose("standoff_0m", 1, 0.0)})
+        deep = copy.deepcopy(mission)
+        deep["fallback_pose"]["z_m"] = 4.2
+        with self.assertRaises(SystemExit):
+            builder.check_floor(deep)
+
+
+
+class ControllerVariantTests(unittest.TestCase):
+    """piccard-inc/piccard-experiments#88 M3-C: the same M3 jobs for Piccard's keep_xy_integral controller image."""
+
+    def test_the_variant_names_its_recipe_arm_and_trial_ids_and_keeps_the_missions(self):
+        for stage in ("m3-0", "m3-a", "m3-b"):
+            default, variant = builder.build(stage), builder.build(stage, controller_variant="keep_xy_integral")
+            with self.subTest(stage=stage):
+                self.assertEqual((default["recipe"], variant["recipe"]),
+                                 ("race-auv-docking/v1", "race-auv-docking-keepxyint/v1"))
+                self.assertEqual([j["mission"] for j in default["jobs"]], [j["mission"] for j in variant["jobs"]])
+                self.assertEqual([j["gains"] for j in default["jobs"]], [j["gains"] for j in variant["jobs"]])
+                for base, item in zip(default["jobs"], variant["jobs"]):
+                    self.assertEqual(item["trial_id"], re.sub(r"-r(\d+)$", r"-kxi-r\1", base["trial_id"]))
+                    self.assertEqual(item["context"]["trial_id"], item["trial_id"])
+                    self.assertEqual(item["context"]["arm"], base["context"]["arm"] + "_keepxyint")
+                    self.assertEqual(item["context"]["controller_variant"], "keep_xy_integral")
+                    self.assertNotIn("controller_variant", base["context"])  # the default jobs are unchanged
+                    self.assertEqual({k: v for k, v in item["context"].items()
+                                      if k not in ("trial_id", "arm", "controller_variant")},
+                                     {k: v for k, v in base["context"].items() if k not in ("trial_id", "arm")})
+
+    def test_only_m3_stages_take_a_variant_and_reruns_keep_it(self):
+        with self.assertRaises(SystemExit):
+            builder.build("b", "n", controller_variant="keep_xy_integral")
+        with self.assertRaises(SystemExit):
+            builder.build("m3-0", controller_variant="keep_z_integral")
+        rerun = builder.rerun("m3-a", None, "pr-m3a-p10-planner-kxi-r2", "keep_xy_integral")
+        self.assertEqual((rerun["recipe"], rerun["jobs"][0]["trial_id"]),
+                         ("race-auv-docking-keepxyint/v1", "pr-m3a-p10-planner-kxi-r2-rerun1"))
+
+    def test_the_cli_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "jobs.json"
+            with mock.patch("sys.stderr", io.StringIO()):
+                self.assertEqual(builder.main(["--stage", "m3-0", "--controller-variant", "keep_xy_integral",
+                                               "--out", str(out)]), 0)
+            document = json.loads(out.read_text())
+        self.assertEqual(document["recipe"], "race-auv-docking-keepxyint/v1")
+        self.assertEqual(document["jobs"][0]["trial_id"], "pr-m30-p10-planner-kxi-r1")
 
 
 if __name__ == "__main__":

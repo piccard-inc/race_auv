@@ -3,11 +3,11 @@
   "contract_sources": {
     "request_schema": {
       "path": "request-v1.schema.json",
-      "sha256": "ec789844f4eadf8073220f381002eafce0d27a178f3be23598f34d3c942e7b2c"
+      "sha256": "85aa6200f3fdcc462e7acbb4b74280d92b71ecccb9bb50a52b366ab911d6c0e1"
     },
     "recipe": {
       "path": "recipe-v1.json",
-      "sha256": "86591096051c1fac9ec8d535846b737b27af0dced362933686d528a6a011985d"
+      "sha256": "bff068e33eef18789e0c59079e549bcd46f9e31e1d9ed353661e7acbf3065536"
     }
   },
   "runtime_layer": "runtime/prepare_candidate.validate with the recipe's configured_output_limits and runtime/mission.validate_mission; null means the key is checked outside those validators",
@@ -535,12 +535,60 @@
         "accept_runtime": false
       },
       {
-        "id": "seed_not_supported",
+        "id": "seed_native_runtime_only",
         "patch": [
           {
             "op": "replace",
             "path": "/mission/seed",
             "value": 1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": true
+      },
+      {
+        "id": "seed_above_range",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/seed",
+            "value": 4294967296
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "seed_negative",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/seed",
+            "value": -1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "seed_bool",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/seed",
+            "value": true
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "seed_fractional",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/seed",
+            "value": 1.5
           }
         ],
         "accept_schema": false,
@@ -618,6 +666,4163 @@
         ],
         "accept_schema": false,
         "accept_runtime": null
+      },
+      {
+        "id": "planner_mission_base",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_tag_size_defaults_to_black_square_edge",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/apriltag_tag_size"
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_lab_configured_tags",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/apriltag_tag_size",
+            "value": "lab_configured"
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_single_stage_at_the_dock_point",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/standoffs_m",
+            "value": [
+              0.0
+            ]
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_standoffs_not_decreasing",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/standoffs_m",
+            "value": [
+              1.5,
+              3.0,
+              0.0
+            ]
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_standoffs_not_ending_at_the_dock_point",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/standoffs_m",
+            "value": [
+              3.0,
+              1.5,
+              0.3
+            ]
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_zero_before_the_end",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/standoffs_m",
+            "value": [
+              3.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_standoff_beyond_the_tank",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/standoffs_m",
+            "value": [
+              9.0,
+              0.0
+            ]
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_too_many_stages",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/standoffs_m",
+            "value": [
+              8.0,
+              7.0,
+              6.0,
+              5.0,
+              4.0,
+              3.0,
+              2.0,
+              1.0,
+              0.0
+            ]
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_tick_too_fast",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/tick_hz",
+            "value": 20
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_zero_speed_cap",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/speed_cap_mps",
+            "value": 0.0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_band_too_wide",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/band_rad",
+            "value": 1.0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_parameter_missing",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/settle_s"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_unknown_parameter",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/learning_rate",
+            "value": 0.1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_boolean_parameter",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/tick_hz",
+            "value": true
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_fallback_outside_tank",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/fallback_pose/z_m",
+            "value": 4.5
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_fallback_missing",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/fallback_pose"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_with_poses",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/poses",
+            "value": [
+              {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              }
+            ]
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_seed_native_runtime_only",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/seed",
+            "value": 7
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_fields_without_the_planner_literal",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/schema",
+            "value": "piccard.race-auv.pose-mission/v1"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "pose_mission_with_planner_parameters",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission/planner",
+            "value": {
+              "standoffs_m": [
+                3.0,
+                1.5,
+                0.3,
+                0.0
+              ],
+              "tick_hz": 5,
+              "band_m": 0.05,
+              "band_rad": 0.05,
+              "vertical_band_m": 0.01,
+              "approach_clearance_m": 0.02,
+              "settle_s": 10,
+              "speed_cap_mps": 0.1,
+              "final_stage_s": 120,
+              "final_deadband_m": 0.005,
+              "final_along_deadband_m": 0.02,
+              "final_along_interval_s": 60,
+              "final_arrival_m": 0.005,
+              "final_reapproach_s": 10,
+              "max_estimate_age_s": 1.0,
+              "max_frozen_estimate_s": 10.0,
+              "estimate_filter_s": 2.0,
+              "heading_window_s": 30.0,
+              "tag_pivot_m": [
+                0.456667,
+                0.0,
+                0.22
+              ],
+              "setpoint_deadband_m": 0.005,
+              "setpoint_deadband_rad": 0.02
+            }
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_estimate_filter",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/estimate_filter_s",
+            "value": 0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_estimate_filter_too_long",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/estimate_filter_s",
+            "value": 60
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_setpoint_deadband",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/setpoint_deadband_m",
+            "value": 0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_setpoint_deadband_too_wide",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/setpoint_deadband_rad",
+            "value": 1.0
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_frozen_estimate_limit",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/max_frozen_estimate_s"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_frozen_estimate_limit_too_short",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/max_frozen_estimate_s",
+            "value": 0.4
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_frozen_estimate_limit_at_its_bound",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/max_frozen_estimate_s",
+            "value": 60.0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_without_heading_window",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/heading_window_s"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_heading_window_too_long",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/heading_window_s",
+            "value": 121
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_tag_pivot",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/tag_pivot_m"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_tag_pivot_not_three_numbers",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/tag_pivot_m",
+            "value": [
+              0.456667,
+              0.0
+            ]
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_tag_pivot_outside_its_bounds",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/tag_pivot_m",
+            "value": [
+              2.5,
+              0.0,
+              0.22
+            ]
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_vertical_band",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/vertical_band_m"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_vertical_band_too_tight",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/vertical_band_m",
+            "value": 0.0005
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_vertical_band_too_wide",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/vertical_band_m",
+            "value": 0.6
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_final_deadband",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/final_deadband_m"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_deadband_too_wide",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_deadband_m",
+            "value": 0.06
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_deadband_at_its_bound",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_deadband_m",
+            "value": 0.05
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_without_approach_clearance",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/approach_clearance_m"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_approach_clearance_negative",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/approach_clearance_m",
+            "value": -0.005
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_approach_clearance_too_high",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/approach_clearance_m",
+            "value": 0.11
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_approach_clearance_zero",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/approach_clearance_m",
+            "value": 0.0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_approach_clearance_at_its_bound",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/approach_clearance_m",
+            "value": 0.1
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_setpoint_deadband_wider_than_vertical_band",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/setpoint_deadband_m",
+            "value": 0.02
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_setpoint_deadband_rad_wider_than_band_rad",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/setpoint_deadband_rad",
+            "value": 0.06
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_final_along_deadband",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/final_along_deadband_m"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_along_deadband_too_tight",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_along_deadband_m",
+            "value": 0.0005
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_along_deadband_too_wide",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_along_deadband_m",
+            "value": 0.11
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_final_along_interval",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/final_along_interval_s"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_along_interval_negative",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_along_interval_s",
+            "value": -1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_along_interval_too_long",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_along_interval_s",
+            "value": 601
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_along_interval_zero",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_along_interval_s",
+            "value": 0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_without_final_arrival",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/final_arrival_m"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_arrival_negative",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_arrival_m",
+            "value": -0.001
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_arrival_too_wide",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_arrival_m",
+            "value": 0.051
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_arrival_zero",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_arrival_m",
+            "value": 0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
+      },
+      {
+        "id": "planner_final_arrival_at_the_along_deadband",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_arrival_m",
+            "value": 0.02
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_without_final_reapproach",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/mission/planner/final_reapproach_s"
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_reapproach_negative",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_reapproach_s",
+            "value": -1
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_reapproach_too_long",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_reapproach_s",
+            "value": 121
+          }
+        ],
+        "accept_schema": false,
+        "accept_runtime": false
+      },
+      {
+        "id": "planner_final_reapproach_zero",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/mission",
+            "value": {
+              "schema": "piccard.race-auv.planner-mission/v1",
+              "mission_id": "race-auv-docking-m3-planner",
+              "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+              "frame_id": "world_ned",
+              "child_frame_id": "cg_link",
+              "seed": null,
+              "apriltag_tag_size": "black_square_edge",
+              "fallback_pose": {
+                "label": "dive",
+                "x_m": -0.325,
+                "y_m": 0.0,
+                "z_m": 3.78,
+                "roll_rad": 0.0,
+                "pitch_rad": 0.0,
+                "yaw_rad": 1.571,
+                "dwell_s": 40
+              },
+              "planner": {
+                "standoffs_m": [
+                  3.0,
+                  1.5,
+                  0.3,
+                  0.0
+                ],
+                "tick_hz": 5,
+                "band_m": 0.05,
+                "band_rad": 0.05,
+                "vertical_band_m": 0.01,
+                "approach_clearance_m": 0.02,
+                "settle_s": 10,
+                "speed_cap_mps": 0.1,
+                "final_stage_s": 120,
+                "final_deadband_m": 0.005,
+                "final_along_deadband_m": 0.02,
+                "final_along_interval_s": 60,
+                "final_arrival_m": 0.005,
+                "final_reapproach_s": 10,
+                "max_estimate_age_s": 1.0,
+                "max_frozen_estimate_s": 10.0,
+                "estimate_filter_s": 2.0,
+                "heading_window_s": 30.0,
+                "tag_pivot_m": [
+                  0.456667,
+                  0.0,
+                  0.22
+                ],
+                "setpoint_deadband_m": 0.005,
+                "setpoint_deadband_rad": 0.02
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/mission/planner/final_reapproach_s",
+            "value": 0
+          }
+        ],
+        "accept_schema": true,
+        "accept_runtime": true
       }
     ]
   }

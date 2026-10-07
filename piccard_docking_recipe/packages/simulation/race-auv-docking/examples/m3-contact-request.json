@@ -1,0 +1,175 @@
+{
+  "gains": {
+    "docking": {
+      "pitch": {
+        "d": 0,
+        "i": 1,
+        "p": 5,
+        "pid_max": 20,
+        "pid_min": -20,
+        "v": 5
+      },
+      "roll": {
+        "d": 0,
+        "i": 0.1,
+        "p": 2,
+        "pid_max": 10,
+        "pid_min": -10,
+        "v": 5
+      },
+      "x": {
+        "d": 0,
+        "i": 0.2,
+        "p": 10,
+        "pid_max": 15,
+        "pid_min": -15,
+        "v": 5
+      },
+      "y": {
+        "d": 0,
+        "i": 0.2,
+        "p": 10,
+        "pid_max": 15,
+        "pid_min": -15,
+        "v": 5
+      },
+      "yaw": {
+        "d": 0,
+        "i": 0.2,
+        "p": 4,
+        "pid_max": 15,
+        "pid_min": -15,
+        "v": 5
+      },
+      "z": {
+        "d": 0,
+        "i": 1,
+        "p": 15,
+        "pid_max": 30,
+        "pid_min": -30,
+        "v": 5
+      }
+    },
+    "flight": {
+      "pitch": {
+        "d": 0,
+        "i": 1,
+        "p": 5,
+        "pid_max": 20,
+        "pid_min": -20,
+        "v": 5
+      },
+      "roll": {
+        "d": 0,
+        "i": 0.1,
+        "p": 2,
+        "pid_max": 10,
+        "pid_min": -10,
+        "v": 5
+      },
+      "u": {
+        "d": 0,
+        "i": 1.5,
+        "p": 30,
+        "pid_max": 50,
+        "pid_min": -50,
+        "v": 5
+      },
+      "v": {
+        "d": 0,
+        "i": 0.2,
+        "p": 5,
+        "pid_max": 15,
+        "pid_min": -15,
+        "v": 5
+      },
+      "yaw": {
+        "d": 0,
+        "i": 0.2,
+        "p": 4,
+        "pid_max": 15,
+        "pid_min": -15,
+        "v": 5
+      },
+      "z": {
+        "d": 0,
+        "i": 1,
+        "p": 15,
+        "pid_max": 30,
+        "pid_min": -30,
+        "v": 5
+      }
+    }
+  },
+  "mission": {
+    "apriltag_tag_size": "black_square_edge",
+    "child_frame_id": "cg_link",
+    "frame_id": "world_ned",
+    "mission_id": "phase-r-a-m-contact-v1-black-square-edge",
+    "poses": [
+      {
+        "dwell_s": 40,
+        "label": "dive",
+        "pitch_rad": 0,
+        "roll_rad": 0,
+        "x_m": -0.325,
+        "y_m": 0,
+        "yaw_rad": 1.571,
+        "z_m": 3.78
+      },
+      {
+        "dwell_s": 120,
+        "label": "approach_3m",
+        "pitch_rad": 0,
+        "roll_rad": 0,
+        "x_m": -0.325,
+        "y_m": 3.995,
+        "yaw_rad": 1.571,
+        "z_m": 3.78
+      },
+      {
+        "dwell_s": 120,
+        "label": "approach_1p5m",
+        "pitch_rad": 0,
+        "roll_rad": 0,
+        "x_m": -0.325,
+        "y_m": 5.495,
+        "yaw_rad": 1.571,
+        "z_m": 3.78
+      },
+      {
+        "dwell_s": 120,
+        "label": "approach_0p3m",
+        "pitch_rad": 0,
+        "roll_rad": 0,
+        "x_m": -0.325,
+        "y_m": 6.695,
+        "yaw_rad": 1.571,
+        "z_m": 3.78
+      },
+      {
+        "dwell_s": 120,
+        "label": "contact",
+        "pitch_rad": 0,
+        "roll_rad": 0,
+        "x_m": -0.325,
+        "y_m": 6.995,
+        "yaw_rad": 1.571,
+        "z_m": 3.78
+      }
+    ],
+    "question": "Phase R-B contact-seeking terminal pose: staged approach to the 0.3 m stand-off (dwell 120 s), then dock point on dock point (stand-off 0, dwell 120 s); when, how fast and how aligned is first contact, and does contact persist?",
+    "schema": "piccard.race-auv.pose-mission/v1",
+    "seed": null
+  },
+  "horizon_s": 1800,
+  "wall_timeout_s": 1950,
+  "context": {
+    "purpose": "the M3 report's control arm at the M2 selection p10: Phase R-A's contact pose mission (campaigns/phase-r-a-20260928/missions/m-contact-v1.json) with black-square-edge tag sizes, the mission and gains of the scored control-arm trials as their trial.json records them",
+    "gain_sources": {
+      "flight": "upstream race_auv da58963 config_sim.yaml flight mode, unchanged",
+      "docking.z/roll/pitch/yaw": "copied from the flight mode",
+      "docking.x/y": "M2 selection p10 (p 10, i 0.2, d 0, v 5, +/-15)"
+    }
+  }
+}

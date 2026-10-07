@@ -6,10 +6,17 @@
            and bhv_params_sim.yaml; optionally a detector config with black-square-edge tag sizes.
   verify:  re-read every installed file and compare against the request before anything launches.
 Only the trial container's copies change; the image and the upstream repositories do not.
+
+A workspace built from piccard-inc/race_auv piccard/docking-recipe carries the docking setup as committed opt-in
+files (race_auv#1). There install() generates nothing: it checks each committed variant against what it would
+have generated from that variant's default, and writes only the gains, into the docking control variant, when
+the request's differ from the committed ones (the recipe lets a request vary them). The record names the docking
+launch variant. A workspace without the variants (the pinned image) is installed as before, byte for byte.
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -25,6 +32,7 @@ FREE_LIMIT_AXES = {("docking", "x"), ("docking", "y")}  # no upstream constant; 
 BLACK_EDGE_FRACTION = 0.8
 HELM_STATE, HELM_BEHAVIOR = "direct_control", "bhv_direct_control"
 BHV_PARAMS = {"default_bhv_world_link": "world_ned", "default_bhv_child_link": "cg_link"}
+VARIANT_SOURCE, LAUNCH_VARIANT = "committed_docking_variants", "docking"
 
 
 def paths(workspace: Path) -> dict:
@@ -34,6 +42,22 @@ def paths(workspace: Path) -> dict:
             "helm": [share / "race_auv_config/mvp_mission_config/helm_sim.yaml"],
             "bhv": [share / "race_auv_bringup/config/bhv_params_sim.yaml"],
             "apriltag": share / "race_auv_bringup/config/simulation/apriltag.yaml"}
+
+
+def variant_paths(workspace: Path) -> dict | None:
+    """The branch's committed docking variants in this workspace, or None where there are none (the pinned image)."""
+    share = workspace / "install/share"
+    found = {"control": [workspace / "src/race_auv/race_auv_config/mvp_control_config/config_sim_docking.yaml",
+                         share / "race_auv_config/mvp_control_config/config_sim_docking.yaml"],
+             "helm": [share / "race_auv_config/mvp_mission_config/helm_sim_docking.yaml"],
+             "bhv": [share / "race_auv_bringup/config/bhv_params_sim_docking.yaml"],
+             "apriltag": share / "race_auv_bringup/config/simulation/apriltag_black_square_edge.yaml"}
+    present = [path.exists() for path in (*found["control"], *found["helm"], *found["bhv"], found["apriltag"])]
+    if not any(present):
+        return None
+    if not all(present):
+        raise ValueError("some docking variants are missing; refuse to mix committed and generated configuration")
+    return found
 
 
 def finite(value) -> bool:
@@ -95,8 +119,67 @@ def corrected_apriltag(config: dict) -> dict:
     return config
 
 
+def check_variants(files: dict, variants: dict) -> None:
+    """Each committed variant is exactly what install() would have generated from its default, the control variant
+    with its own committed docking gains; anything else refuses the run."""
+    def load(path: Path):
+        return yaml.safe_load(path.read_text())
+
+    default = load(files["control"][-1])
+    for path in variants["control"]:
+        control = load(path)
+        expected = copy.deepcopy(default)
+        if "docking" in expected["control_modes"] or "docking" not in control["control_modes"]:
+            raise ValueError(f"{path}: expected the default's modes plus docking")
+        expected["control_modes"]["docking"] = control["control_modes"]["docking"]
+        expected["control_modes"]["flight"] = control["control_modes"]["flight"]
+        if control != expected:
+            raise ValueError(f"{path}: the control variant changes more than the flight and docking gains")
+    for default_path, path in zip(files["helm"], variants["helm"]):
+        if load(path) != install_helm(load(default_path)):
+            raise ValueError(f"{path}: the helm variant differs from the direct_control install")
+    for default_path, path in zip(files["bhv"], variants["bhv"]):
+        expected = load(default_path) or {}
+        if HELM_BEHAVIOR in expected:
+            raise ValueError(f"{default_path}: bhv_direct_control already configured in the default")
+        expected[HELM_BEHAVIOR] = dict(BHV_PARAMS)
+        if load(path) != expected:
+            raise ValueError(f"{path}: the behaviour variant differs from the direct_control install")
+    if load(variants["apriltag"]) != corrected_apriltag(load(files["apriltag"])):
+        raise ValueError(f"{variants['apriltag']}: the AprilTag variant is not the black-square-edge correction")
+
+
+def install_variants(gains: dict, mission: dict, files: dict, variants: dict, output: Path) -> dict:
+    """Install onto the committed variants: verify them, write only gains that differ, record what ran."""
+    validate(gains, configured_limits(yaml.safe_load(files["control"][-1].read_text())))
+    check_variants(files, variants)
+    output.mkdir(parents=True, exist_ok=True)
+    records, written = [], []
+    for path in variants["control"]:
+        data = yaml.safe_load(path.read_text())
+        modes = data["control_modes"]
+        if (modes["flight"], modes["docking"]) != (gains["flight"], gains["docking"]):
+            modes["flight"], modes["docking"] = gains["flight"], gains["docking"]
+            path.write_text(yaml.safe_dump(data, sort_keys=False))
+            written.append(str(path))
+    for path in (*variants["control"], *variants["helm"], *variants["bhv"], variants["apriltag"]):
+        records.append({"path": str(path), "sha256": sha256_text(path.read_text())})
+    black_square_edge = mission["apriltag_tag_size"] == "black_square_edge"
+    record = {"schema": "piccard.race-auv.candidate/v1", "gains": gains, "helm_state": HELM_STATE,
+              "helm_behavior": {HELM_BEHAVIOR: {"plugin": "helm/DirectControl", "control_mode": "docking"}},
+              "apriltag_tag_size": mission["apriltag_tag_size"],
+              "apriltag_config": str(variants["apriltag"]) if black_square_edge else None,
+              "configurations": records, "scope": "simulation only, no hardware authority",
+              "source": VARIANT_SOURCE, "launch_variant": LAUNCH_VARIANT, "written": written}
+    (output / "candidate.json").write_text(json.dumps(record, indent=2) + "\n")
+    return record
+
+
 def install(gains: dict, mission: dict, workspace: Path, output: Path) -> dict:
     files = paths(workspace)
+    variants = variant_paths(workspace)
+    if variants is not None:
+        return install_variants(gains, mission, files, variants, output)
     control = yaml.safe_load(files["control"][-1].read_text())
     validate(gains, configured_limits(control))
     output.mkdir(parents=True, exist_ok=True)
@@ -138,7 +221,8 @@ def install(gains: dict, mission: dict, workspace: Path, output: Path) -> dict:
 
 
 def verify(gains: dict, mission: dict, workspace: Path, output: Path) -> dict:
-    files = paths(workspace)
+    variants = variant_paths(workspace)
+    files = paths(workspace) if variants is None else variants  # the files the launch will read
     for path in files["control"]:
         modes = yaml.safe_load(path.read_text())["control_modes"]
         for mode, axes in MODES.items():
@@ -163,6 +247,8 @@ def verify(gains: dict, mission: dict, workspace: Path, output: Path) -> dict:
     record = json.loads((output / "candidate.json").read_text())
     if record["gains"] != gains or record["apriltag_tag_size"] != mission["apriltag_tag_size"]:
         raise ValueError("candidate record does not match the request")
+    if (variants is not None) != (record.get("source") == VARIANT_SOURCE):
+        raise ValueError("candidate record was installed for another workspace")
     result = {"schema": "piccard.race-auv.candidate-install-verification/v1", "status": "verified",
               "configurations": [{"path": item["path"], "sha256": hashlib.sha256(Path(item["path"]).read_bytes()).hexdigest()}
                                  for item in record["configurations"]],

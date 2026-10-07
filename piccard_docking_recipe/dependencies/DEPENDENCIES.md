@@ -21,7 +21,8 @@ patrykcieslak/stonefish):
       -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTS=OFF -DEMBED_RESOURCES=OFF
     cmake --build stonefish-build --parallel 4 && sudo cmake --install stonefish-build && sudo ldconfig
 
-No patch is applied. Lineage: a fresh build on linux/arm64 reproduced the docking image's `libStonefish.so`
+The docking study applied no patch; to record the simulator seed, apply `stonefish_seed_v1` first (see "Patches").
+Lineage of the unpatched build: a fresh build on linux/arm64 reproduced the docking image's `libStonefish.so`
 byte for byte: SHA-256 `7d43894dd173b8d57eef0ef1ff12e085766594df10e01063ab078a30781408b5`, ELF build-id
 `c403cb3e755e54657e01148d4fdd27ac83ea778a`. It used gcc/g++ 13.3.0-6ubuntu2~24.04.1, cmake 3.28.3 and ninja
 1.11.1 on the base above. The record is Piccard physical-ai
@@ -77,6 +78,21 @@ study. They are listed by SHA-256 of the patch file in Piccard physical-ai, and 
 A variant is built by checking the pristine file's hash, `patch -p1` in mvp_control, checking the patched file's
 hash, then `colcon build --packages-select mvp_control --cmake-args -DCMAKE_BUILD_TYPE=Release`.
 
+**Simulator patch: `stonefish_seed_v1`**, optional, SHA-256
+`6068dbfbad5067aee90ccd6abc4e9875ff79d2866e76b0f2996bc8bd6595f16d`.
+
+- **What it does.** Stonefish seeds its sensor-noise generators from `std::random_device` when it loads, so a run's
+  seed can be neither set nor recorded. The patch changes only those two lines (`Library/src/sensors/Sensor.cpp`,
+  `Library/src/comms/USBL.cpp`): the seed comes from `STONEFISH_SEED` when it is set, and each seed used is
+  printed.
+- **Where it is.** `piccard_docking_recipe/packages/simulation/race-auv-docking/simulator-patches/`, with
+  `STONEFISH_SEED_V1.md` giving the pristine and patched file hashes. Apply it in the Stonefish checkout before
+  the build: `patch -p1 < stonefish_seed_v1.patch`.
+- **Effect on the build.** A patched build does not match the lineage hash above.
+- **Effect in RACE.** The seed reaches only the pressure and DVL noise; the scene sets the IMU's noise to zero.
+  The report's trials ran unpatched and recorded no seed. `piccard_docking_recipe/RUN.md` says what a seed does
+  and does not fix.
+
 ## Licences
 
 | Source | Licence as recorded |
@@ -90,7 +106,7 @@ hash, then `colcon build --packages-select mvp_control --cmake-args -DCMAKE_BUIL
 | world_of_stonefish `d51d59e` | package manifest says "TODO: License declaration" |
 | race_auv_sim | not reviewed |
 
-The three variant patches modify GPL-3.0 code and carry its terms. **Nothing from these sources, builds or patches
+The three variant patches and `stonefish_seed_v1` modify GPL-3.0 code and carry its terms. **Nothing from these sources, builds or patches
 enters Mariana**, Piccard's physics engine. It talks to Piccard's bridge over a socket and contains none of these
 files; its repository was checked by path on 2026-10-07. Piccard's records mark every source "review required before
 redistribution or commercial packaging".

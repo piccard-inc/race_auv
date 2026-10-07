@@ -404,7 +404,7 @@
         }
       }
     },
-    "mission": {
+    "pose_mission": {
       "$comment": "piccard.race-auv.pose-mission/v1: cg_link poses in the controller's dead-reckoned race_auv/world_ned, which is the Stonefish world rotated +90 deg about z with its origin at base_link's start: x_C = -y_W, y_C = x_W + 3.8, z_C = depth, yaw_C = yaw_W + 1.571. Labels must be unique (checked by the runtime). Pose bounds: cg_link inside the tank's inner box and the vehicle's lowest point (0.18 m below cg_link) above its floor (piccard-physical-ai#104). No stand-off floor: poses may put the AUV in contact.",
       "type": "object",
       "additionalProperties": false,
@@ -456,6 +456,229 @@
           "$comment": "lab_configured (default) reproduces the lab detector config (0.15/0.05 m); black_square_edge installs the corrected CPU-detector variant (0.12/0.04 m)."
         }
       }
+    },
+    "planner": {
+      "$comment": "M3 planner parameters (runtime/planner_fused_dock.py). Well-formedness bounds only; the values are the preregistration's (piccard-experiments#88). standoffs_m must also decrease strictly (checked by the runtime).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "standoffs_m",
+        "tick_hz",
+        "band_m",
+        "band_rad",
+        "vertical_band_m",
+        "approach_clearance_m",
+        "settle_s",
+        "speed_cap_mps",
+        "final_stage_s",
+        "final_deadband_m",
+        "final_along_deadband_m",
+        "final_along_interval_s",
+        "final_arrival_m",
+        "final_reapproach_s",
+        "max_estimate_age_s",
+        "max_frozen_estimate_s",
+        "estimate_filter_s",
+        "heading_window_s",
+        "tag_pivot_m",
+        "setpoint_deadband_m",
+        "setpoint_deadband_rad"
+      ],
+      "properties": {
+        "standoffs_m": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8.0
+          },
+          "contains": {
+            "const": 0
+          },
+          "$comment": "AUV dock point behind the fused station dock point, per stage; the last is 0"
+        },
+        "tick_hz": {
+          "type": "number",
+          "minimum": 1.0,
+          "maximum": 10.0
+        },
+        "band_m": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 1.0
+        },
+        "band_rad": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 0.5
+        },
+        "vertical_band_m": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 0.5,
+          "$comment": "protocol v1.2: the vertical band in every stage but the final one, in the stage-advance test and the refinement step (band_m stays the along band, and the vertical band of the final stage)"
+        },
+        "approach_clearance_m": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.1,
+          "$comment": "protocol v1.3: every stage's vertical target places the AUV dock point this far above the station dock point, the final stage's included, so the AUV's legs stay clear of the station frame's rails on the approach; the vertical error and band are around that target"
+        },
+        "settle_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 300.0
+        },
+        "speed_cap_mps": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1.0,
+          "$comment": "set-point rate limit in every stage (protocol v1.1): the x/y set point walks to each stage's goal at most this fast; caps the commanded speed, not the vehicle's"
+        },
+        "final_stage_s": {
+          "type": "number",
+          "minimum": 1.0,
+          "maximum": 900.0
+        },
+        "final_deadband_m": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 0.05,
+          "$comment": "in the final stage the lateral world axis, and from protocol v1.5 the along axis in hold, is re-targeted to the live goal when its own goal differs from its held value by more than this, and walked there at speed_cap_mps (v1.4: per world axis for both, the along axis gated; v1.2-v1.3: the Euclidean x/y difference, both axes together)"
+        },
+        "final_along_deadband_m": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 0.1,
+          "$comment": "the final stage's along axis (the world axis closer to the approach). Protocol v1.5: while approaching, it re-targets only when its goal differs from the held value by more than this and final_along_interval_s has passed; in hold, a fused along error past this for final_reapproach_s starts a new approach. (v1.4: re-targeted when the fused along error exceeded this.) mvp_control zeroes an axis's integral on any set-point change"
+        },
+        "final_along_interval_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 600.0,
+          "$comment": "protocol v1.4-v1.5: the along axis re-targets while approaching only this long after its last along change (the stage start counts as one)"
+        },
+        "final_arrival_m": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.05,
+          "$comment": "protocol v1.5: arrival, once per approach: the fused along error within this of the goal on the approach's side re-issues the along set point at the goal (zeroing the approach's windup) and holds; must be less than final_along_deadband_m"
+        },
+        "final_reapproach_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 120.0,
+          "$comment": "protocol v1.5: in hold, the fused along error past final_along_deadband_m for this long starts a new approach from its side, on a fresh tick (stale ticks neither restart nor end the clock)"
+        },
+        "max_estimate_age_s": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10.0
+        },
+        "max_frozen_estimate_s": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 60.0
+        },
+        "estimate_filter_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 30.0,
+          "$comment": "time constant of the low-pass on the fused station dock point (position and heading); 0: none"
+        },
+        "heading_window_s": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 120.0
+        },
+        "tag_pivot_m": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": -2.0,
+            "maximum": 2.0
+          }
+        },
+        "setpoint_deadband_m": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5,
+          "$comment": "an axis's set point changes only when its goal moves past this (x, y, z), at a stage start and in a refinement step (protocol v1.3); mvp_control zeroes an axis's integral on any set-point change. At most vertical_band_m and band_m (checked at runtime)"
+        },
+        "setpoint_deadband_rad": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5,
+          "$comment": "the same for yaw; at most band_rad (checked at runtime)"
+        }
+      }
+    },
+    "planner_mission": {
+      "$comment": "piccard.race-auv.planner-mission/v1 (M3, piccard-physical-ai#109): fly fallback_pose (the dive; the tags are not visible from the surface), then the planner's staged approach on the tag-fused station dock point. apriltag_tag_size defaults to black_square_edge here.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "mission_id",
+        "question",
+        "frame_id",
+        "child_frame_id",
+        "seed",
+        "fallback_pose",
+        "planner"
+      ],
+      "properties": {
+        "schema": {
+          "const": "piccard.race-auv.planner-mission/v1"
+        },
+        "mission_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "frame_id": {
+          "const": "world_ned"
+        },
+        "child_frame_id": {
+          "const": "cg_link"
+        },
+        "seed": {
+          "type": "null"
+        },
+        "apriltag_tag_size": {
+          "enum": [
+            "lab_configured",
+            "black_square_edge"
+          ],
+          "$comment": "black_square_edge (default for planner missions): the CPU-detector config with 0.12/0.04 m; lab_configured reproduces the lab detector config (0.15/0.05 m)."
+        },
+        "fallback_pose": {
+          "$ref": "#/$defs/pose"
+        },
+        "planner": {
+          "$ref": "#/$defs/planner"
+        }
+      }
+    },
+    "mission": {
+      "$comment": "One of the two mission kinds, told apart by the schema literal (a discriminated union).",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/pose_mission"
+        },
+        {
+          "$ref": "#/$defs/planner_mission"
+        }
+      ]
     }
   }
 }

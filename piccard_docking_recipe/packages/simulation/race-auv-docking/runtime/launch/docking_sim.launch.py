@@ -9,6 +9,9 @@ robot_state_publisher would otherwise publish a second parent, race_station/base
 size and rendering quality are upstream's. Launch arguments:
   scenario         absolute path of the wrapper scenario (required)
   apriltag_config  AprilTag pipeline config; empty uses upstream's config/simulation/apriltag.yaml
+  variant          empty for the controller and helm includes prepare_candidate configured in place (pinned
+                   image); "docking" for piccard/docking-recipe's committed mvp_control_docking_sim and
+                   mvp_mission_docking_sim includes
 """
 import os
 
@@ -47,6 +50,10 @@ def build(context):
     scenario = LaunchConfiguration("scenario").perform(context)
     apriltag_config = LaunchConfiguration("apriltag_config").perform(context)
     apriltag_args = {"config": apriltag_config} if apriltag_config else {}
+    variant = LaunchConfiguration("variant").perform(context)
+    if variant not in ("", "docking"):
+        raise RuntimeError(f"unknown launch variant {variant!r}")
+    suffix = "_docking" if variant else ""
     return [
         Node(package="stonefish_ros2", executable="stonefish_simulator", name="stonefish_simulator",
              arguments=[os.path.join(world, "data/"), scenario, SIMULATION_RATE, WINDOW_X, WINDOW_Y, QUALITY],
@@ -59,8 +66,8 @@ def build(context):
         driver("modem_driver_node", sim_params),
         include(f"{ROBOT}_bringup", "launch", "include", "simulation", "localization_sim.launch.py"),
         include(f"{ROBOT}_bringup", "launch", "include", "description.launch.py"),
-        include(f"{ROBOT}_bringup", "launch", "include", "simulation", "mvp_control_sim.launch.py"),
-        include(f"{ROBOT}_bringup", "launch", "include", "simulation", "mvp_mission_sim.launch.py"),
+        include(f"{ROBOT}_bringup", "launch", "include", "simulation", f"mvp_control{suffix}_sim.launch.py"),
+        include(f"{ROBOT}_bringup", "launch", "include", "simulation", f"mvp_mission{suffix}_sim.launch.py"),
         include(f"{ROBOT}_bringup", "launch", "include", "simulation", "apriltag_sim.launch.py", arguments=apriltag_args),
         ground_truth_scope(include("race_station_bringup", "launch", "bringup_simulation.launch.py"),
                            include("race_auv_sim_pkg", "launch", "ground_truth_pose.launch.py",
@@ -72,5 +79,6 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("scenario"),
         DeclareLaunchArgument("apriltag_config", default_value=""),
+        DeclareLaunchArgument("variant", default_value=""),
         OpaqueFunction(function=build),
     ])

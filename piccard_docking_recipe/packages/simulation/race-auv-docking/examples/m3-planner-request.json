@@ -1,0 +1,167 @@
+{
+  "gains": {
+    "flight": {
+      "u": {
+        "p": 30.0,
+        "i": 1.5,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -50,
+        "pid_max": 50
+      },
+      "v": {
+        "p": 5.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      },
+      "z": {
+        "p": 15.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -30,
+        "pid_max": 30
+      },
+      "roll": {
+        "p": 2.0,
+        "i": 0.1,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -10,
+        "pid_max": 10
+      },
+      "pitch": {
+        "p": 5.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -20,
+        "pid_max": 20
+      },
+      "yaw": {
+        "p": 4.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      }
+    },
+    "docking": {
+      "x": {
+        "p": 10.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      },
+      "y": {
+        "p": 10.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      },
+      "z": {
+        "p": 15.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -30,
+        "pid_max": 30
+      },
+      "roll": {
+        "p": 2.0,
+        "i": 0.1,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -10,
+        "pid_max": 10
+      },
+      "pitch": {
+        "p": 5.0,
+        "i": 1.0,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -20,
+        "pid_max": 20
+      },
+      "yaw": {
+        "p": 4.0,
+        "i": 0.2,
+        "d": 0.0,
+        "v": 5.0,
+        "pid_min": -15,
+        "pid_max": 15
+      }
+    }
+  },
+  "mission": {
+    "schema": "piccard.race-auv.planner-mission/v1",
+    "mission_id": "race-auv-docking-m3-planner",
+    "question": "Can a planner that sees only the tag-fused station dock point bring the AUV dock point onto the station dock point, commanding direct_control set points through the selected gains?",
+    "frame_id": "world_ned",
+    "child_frame_id": "cg_link",
+    "seed": null,
+    "apriltag_tag_size": "black_square_edge",
+    "fallback_pose": {
+      "label": "dive",
+      "x_m": -0.325,
+      "y_m": 0.0,
+      "z_m": 3.78,
+      "roll_rad": 0.0,
+      "pitch_rad": 0.0,
+      "yaw_rad": 1.571,
+      "dwell_s": 40
+    },
+    "planner": {
+      "standoffs_m": [
+        3.0,
+        1.5,
+        0.3,
+        0.0
+      ],
+      "tick_hz": 5,
+      "band_m": 0.05,
+      "band_rad": 0.05,
+      "vertical_band_m": 0.01,
+      "approach_clearance_m": 0.02,
+      "settle_s": 10,
+      "speed_cap_mps": 0.1,
+      "final_stage_s": 420,
+      "final_deadband_m": 0.005,
+      "final_along_deadband_m": 0.02,
+      "final_along_interval_s": 60,
+      "final_arrival_m": 0.005,
+      "final_reapproach_s": 10,
+      "max_estimate_age_s": 1.0,
+      "max_frozen_estimate_s": 2.0,
+      "estimate_filter_s": 2.0,
+      "heading_window_s": 30.0,
+      "tag_pivot_m": [
+        0.456667,
+        0.0,
+        0.22
+      ],
+      "setpoint_deadband_m": 0.005,
+      "setpoint_deadband_rad": 0.02
+    }
+  },
+  "horizon_s": 1800,
+  "wall_timeout_s": 1950,
+  "context": {
+    "purpose": "M3 planner request example (piccard-inc/piccard-physical-ai#109); the planner values are protocol v1.5's (piccard-experiments#88): v1.4's, with the final stage's along axis approaching on command staleness (final_along_deadband_m, final_along_interval_s), arriving once within final_arrival_m of the goal (the set point re-issued there), then holding on the goal and approaching again after final_reapproach_s past final_along_deadband_m, over a longer final stage (final_stage_s 420)",
+    "gain_sources": {
+      "flight": "upstream race_auv da58963 config_sim.yaml flight mode, unchanged",
+      "docking.z/roll/pitch/yaw": "copied from the flight mode",
+      "docking.x/y": "M2 selection p10 (p 10, i 0.2, d 0, v 5, +/-15)"
+    },
+    "fallback_pose": "M1's dive (x_C -0.325, y_C 0.0, z_C 3.78, yaw 1.571, 40 s): derived from the station dock point like every M2 mission; the planner does not see it and takes over after its dwell",
+    "horizon": "stages end on settling, so the horizon (1800 s, v1.1) only bounds the trial; the planner reports complete after its final stage (120 s)"
+  }
+}

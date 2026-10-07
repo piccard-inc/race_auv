@@ -11,6 +11,7 @@ Same inputs give the same bytes. Standard library only; nothing here calls the A
     build_phase_r_campaign.py --stage a0|a1|a2 [--out jobs.json]
     build_phase_r_campaign.py --stage holdout|b --selected <knob> [--out jobs.json]
     build_phase_r_campaign.py --stage a0b|holdout2|a0c --selected <knob> [--out jobs.json]  # #102
+    build_phase_r_campaign.py --stage m3-0|m3-a|m3-b [--out jobs.json]  # M3, #109
     build_phase_r_campaign.py --stage <stage> [--selected <knob>] --rerun <trial_id>   # <trial_id>-rerun1 alone
     build_phase_r_campaign.py --write-missions    # regenerate the mission files from the definitions below
 
@@ -29,6 +30,15 @@ clearance of a pose is the smallest floor height under the vehicle's footprint, 
 drift, minus the depth of its lowest point, for a level vehicle at the commanded pose. The CLI prints it.
 M-depth-hold v1 (+0.5 m) fails this: its deeper pose rested on the floor in both M2 holdout runs; it stays in the
 record for the stage that ran it (holdout) and is not used by new stages.
+
+M3 (piccard-experiments #88, piccard-physical-ai #109): the planner mission (piccard.race-auv.planner-mission/v1) is
+the example request's (examples/m3-planner-request.json: M1's dive as the fallback pose, the planner values proposed
+on #88) with black_square_edge tags, at the M2 selection p10. Stage m3-0 is the unscored dev run; m3-a interleaves two
+planner runs with two runs of M2's precomputed contact mission at the same stand-offs (black_square_edge); m3-b runs
+the planner once each with the lab's tag sizes, speed caps 0.05 and 0.2 m/s, and N gains. Planner stages end on
+settling, so every M3 jobs file gets the fixed horizon M3_HORIZON_S. The floor check covers the fallback pose and the
+nominal pose of every stand-off. --controller-variant keep_xy_integral emits the same M3 jobs for Piccard's controller
+variant (M3-C): the variant recipe, context.arm suffixed _keepxyint, context.controller_variant and kxi trial ids.
 """
 from __future__ import annotations
 
@@ -38,6 +48,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -45,6 +56,7 @@ PACKAGE = ROOT / "packages/simulation/race-auv-docking"
 CAMPAIGN_DIR = PACKAGE / "campaigns/phase-r-a-20260928"
 MISSION_DIR = CAMPAIGN_DIR / "missions"
 EXAMPLE_REQUEST = PACKAGE / "examples/m1-smoke-request.json"
+PLANNER_EXAMPLE = PACKAGE / "examples/m3-planner-request.json"
 TANK_FLOOR = PACKAGE / "campaigns/tank-floor-v1.json"
 FLOOR_CLEARANCE_MIN_M = 0.3
 FOOTPRINT_MARGIN_M = 0.3  # horizontal allowance around the commanded footprint (tracking error, frame drift)
@@ -68,7 +80,24 @@ DERIVATION = ("cg_link in controller world_ned from the station dock point (Ston
 KNOBS = {"n": {}, "p2p5": {"p": 2.5}, "p10": {"p": 10.0}, "i0": {"i": 0.0}, "i0p5": {"i": 0.5},
          "v10": {"v": 10.0}, "v20": {"v": 20.0}}
 PROBES = ("p2p5", "p10", "i0", "i0p5", "v10", "v20")
-STAGE_TOKENS = {"holdout": "ho", "holdout2": "ho2"}  # trial ids as Phase A: pr-ho-<knob>-<mission>-r<n>
+STAGE_TOKENS = {"holdout": "ho", "holdout2": "ho2", "m3-0": "m30", "m3-a": "m3a", "m3-b": "m3b"}  # pr-ho-<knob>-...
+M3_CAMPAIGN_ID = "m3-planner"
+M3_PROTOCOL = ("piccard-inc/piccard-experiments#88 M3 preregistration: planner on the tag-fused dock point, v1.5 "
+               "(the planner values of examples/m3-planner-request.json; the set point walks at speed_cap_mps in every "
+               "stage, the final stage follows the live estimate in x/y, vertical_band_m before it, every stage's "
+               "vertical target approach_clearance_m above the station dock point, refinement held to the deadbands, "
+               "final-stage re-targets per axis; the along axis approaches on command staleness, is re-issued at the "
+               "goal on arrival and then holds on it; docked is the first full hold in the final stage)")
+M3_PROTOCOL_VERSION = "v1.5"  # every M3 job context carries it; race_m3_metrics reports it per trial
+M3_GAINS = "p10"  # the M2 selection (#87)
+# Controller arms (piccard-inc/piccard-experiments#88, M3-C): the recipe image's lab controller, and Piccard's
+# keep_xy_integral variant image (Dockerfile.controller-variant). A variant jobs file names its recipe, suffixes
+# context.arm, records context.controller_variant and puts a token in the trial ids; the default jobs are unchanged.
+# M3-C was retired after its M3-0 on protocol v1.4 (no set-point change clears the windup under it); kept on record.
+CONTROLLER_VARIANTS = {"upstream": None,
+                       "keep_xy_integral": {"recipe": "race-auv-docking-keepxyint/v1", "arm_suffix": "keepxyint",
+                                            "token": "kxi"}}
+M3_HORIZON_S = 1800  # v1.1; planner stages end on settling, so the horizon only bounds the trial
 FOLLOW_UP = "piccard-physical-ai#102"
 SELECTED_STAGES = ("holdout", "b", "a0b", "holdout2", "a0c")  # stages that take --selected
 # Missions kept for the record only: the stages that ran them rebuild them, nothing new may use them.
@@ -207,7 +236,7 @@ def floor_clearance(pose: dict, geometry: dict | None = None) -> float:
 def check_floor(mission: dict, geometry: dict | None = None) -> list[tuple[str, float]]:
     """(label, clearance) per pose; SystemExit if any pose is closer than FLOOR_CLEARANCE_MIN_M to the floor."""
     geometry = geometry or json.loads(TANK_FLOOR.read_text())
-    rows = [(p["label"], floor_clearance(p, geometry)) for p in mission["poses"]]
+    rows = [(p["label"], floor_clearance(p, geometry)) for p in floor_poses(mission)]
     low = [(label, value) for label, value in rows if value < FLOOR_CLEARANCE_MIN_M]
     if low:
         raise SystemExit(f"{mission['mission_id']}: floor clearance below {FLOOR_CLEARANCE_MIN_M} m at "
@@ -224,19 +253,51 @@ def gains_for(knob: str) -> dict:
     return gains
 
 
+def is_planner(mission: dict) -> bool:
+    return mission["schema"] == "piccard.race-auv.planner-mission/v1"
+
+
 def horizon(mission: dict) -> int:
+    if is_planner(mission):
+        return M3_HORIZON_S
     return int(sum(p["dwell_s"] for p in mission["poses"])) + HORIZON_MARGIN_S
 
 
+def floor_poses(mission: dict) -> list[dict]:
+    """The poses the floor check covers: a pose mission's poses; a planner mission's fallback pose and the nominal
+    pose of each stand-off (the M2 derivation, which the planner's goal equals when the fused estimate is exact)."""
+    if not is_planner(mission):
+        return mission["poses"]
+    return [mission["fallback_pose"]] + [pose(f"standoff_{s:g}m", 1, s) for s in mission["planner"]["standoffs_m"]]
+
+
+def planner_mission(tag_size: str = "black_square_edge", **changes) -> dict:
+    """The M3 planner mission: the example request's, with its tag size and any planner values changed."""
+    mission = json.loads(PLANNER_EXAMPLE.read_text())["mission"]
+    mission["apriltag_tag_size"] = tag_size
+    mission["planner"].update(changes)
+    mission["mission_id"] += "".join(f"-{key.replace('_', '-')}-{value:g}" for key, value in sorted(changes.items()))
+    mission["mission_id"] += "-lab-tags" if tag_size == "lab_configured" else ""
+    return mission
+
+
+def control_mission() -> dict:
+    """M3-A's control: M2's precomputed contact mission (the same stand-offs as the planner) with black_square_edge."""
+    mission = mission_document("contact", "black_square_edge")
+    mission["mission_id"] += "-black-square-edge"
+    return mission
+
+
 def job(stage: str, knob: str, key: str, repeat: int, role: str, variant: str = "", media: dict | None = None,
-        mission: dict | None = None) -> dict:
+        mission: dict | None = None, arm: str | None = None) -> dict:
     mission, mission_sha = (mission, sha256(mission_bytes(mission))) if mission else load_mission(key)
     trial_id = f"pr-{STAGE_TOKENS.get(stage, stage)}-{knob}-{key}{'-' + variant if variant else ''}-r{repeat}"
-    context = {"schema": "piccard.race-auv.phase-r-a-context/v1", "trial_id": trial_id, "campaign_id": CAMPAIGN_ID,
-               "protocol": PROTOCOL,
+    campaign, protocol = (M3_CAMPAIGN_ID, M3_PROTOCOL) if arm else (CAMPAIGN_ID, PROTOCOL)
+    context = {"schema": "piccard.race-auv.phase-r-a-context/v1", "trial_id": trial_id, "campaign_id": campaign,
+               "protocol": protocol, **({"protocol_version": M3_PROTOCOL_VERSION} if arm else {}),
                "stage": stage, "gain_set": knob, "docking_xy_overrides": KNOBS[knob], "mission_key": key,
                "mission_sha256": mission_sha, "role": role, "repeat": repeat, "pose_derivation": DERIVATION,
-               "epistemic_class": "synthetic_simulation_development"}
+               "epistemic_class": "synthetic_simulation_development", **({"arm": arm} if arm else {})}
     item = {"trial_id": trial_id, "gains": gains_for(knob), "mission": mission, "context": context}
     if media:
         item["media"] = media
@@ -322,14 +383,52 @@ def stage_b(selected: str) -> list[dict]:
     return [job("b", "n", "contact", 1, "contact_nominal"), job("b", selected, "contact", 1, "contact_selected")]
 
 
+def stage_m3_0() -> list[dict]:
+    """1 trial (#109): the planner on the arm64 dev loop, unscored; it also records the fused estimate against ground
+    truth down to contact, which #88 asks for before v1.0 fixes the prediction."""
+    return [job("m3-0", M3_GAINS, "planner", 1, "dev_unscored", mission=planner_mission(), arm="planner")]
+
+
+def stage_m3_a() -> list[dict]:
+    """4 trials: the planner twice and the precomputed contact mission twice, interleaved."""
+    jobs = []
+    for repeat in (1, 2):
+        jobs.append(job("m3-a", M3_GAINS, "planner", repeat, "planner", mission=planner_mission(), arm="planner"))
+        jobs.append(job("m3-a", M3_GAINS, "contact", repeat, "precomputed_control", mission=control_mission(),
+                        arm="control"))
+    return jobs
+
+
+def stage_m3_b() -> list[dict]:
+    """4 trials, the planner once each: the lab's tag sizes, speed caps 0.05 and 0.2 m/s, and N gains."""
+    return [job("m3-b", M3_GAINS, "planner", 1, "tag_size_lab_configured", "labtag",
+                mission=planner_mission("lab_configured"), arm="planner"),
+            job("m3-b", M3_GAINS, "planner", 1, "speed_cap_0p05", "cap0p05", mission=planner_mission(speed_cap_mps=0.05),
+                arm="planner"),
+            job("m3-b", M3_GAINS, "planner", 1, "speed_cap_0p2", "cap0p2", mission=planner_mission(speed_cap_mps=0.2),
+                arm="planner"),
+            job("m3-b", "n", "planner", 1, "nominal_gains", mission=planner_mission(), arm="planner")]
+
+
 STAGES = {"a0": stage_a0, "a1": stage_a1, "holdout": stage_holdout, "a2": stage_a2, "b": stage_b, "a0b": stage_a0b,
-          "holdout2": stage_holdout2, "a0c": stage_a0c}
+          "holdout2": stage_holdout2, "a0c": stage_a0c, "m3-0": stage_m3_0, "m3-a": stage_m3_a, "m3-b": stage_m3_b}
 
 
-def build(stage: str, selected: str | None = None) -> dict:
+def build(stage: str, selected: str | None = None, controller_variant: str = "upstream") -> dict:
     if stage in SELECTED_STAGES and selected not in KNOBS:
         raise SystemExit(f"--selected must be one of {sorted(KNOBS)} for stage {stage}")
+    if controller_variant not in CONTROLLER_VARIANTS:
+        raise SystemExit(f"--controller-variant must be one of {sorted(CONTROLLER_VARIANTS)}")
+    variant = CONTROLLER_VARIANTS[controller_variant]
+    if variant and not stage.startswith("m3-"):
+        raise SystemExit(f"controller variant {controller_variant} is an M3 arm (piccard-inc/piccard-experiments#88 "
+                         f"M3-C); stage {stage} is not M3")
     jobs = STAGES[stage](selected) if stage in SELECTED_STAGES else STAGES[stage]()
+    for item in jobs if variant else ():
+        context = item["context"]
+        item["trial_id"] = context["trial_id"] = re.sub(r"-r(\d+)$", rf"-{variant['token']}-r\1", item["trial_id"])
+        context["arm"] = f"{context['arm']}_{variant['arm_suffix']}"
+        context["controller_variant"] = controller_variant
     geometry = json.loads(TANK_FLOOR.read_text())
     for key in {item["context"]["mission_key"] for item in jobs}:
         recorded = RECORDED_ONLY.get(key)
@@ -339,13 +438,14 @@ def build(stage: str, selected: str | None = None) -> dict:
         if item["context"]["mission_key"] not in RECORDED_ONLY:
             check_floor(item["mission"], geometry)
     longest = max(horizon(item["mission"]) for item in jobs)  # one horizon per jobs file; shorter missions end early
-    return {"recipe": RECIPE, "horizon_s": longest, "wall_timeout_s": longest + WALL_MARGIN_S, "jobs": jobs}
+    return {"recipe": variant["recipe"] if variant else RECIPE, "horizon_s": longest,
+            "wall_timeout_s": longest + WALL_MARGIN_S, "jobs": jobs}
 
 
-def rerun(stage: str, selected: str | None, trial_id: str) -> dict:
+def rerun(stage: str, selected: str | None, trial_id: str, controller_variant: str = "upstream") -> dict:
     """The one re-run of an excluded trial (audit problem, non-finite stop, route incomplete): the same job as
     <trial_id>-rerun1, with rerun_of in its context."""
-    original = build(stage, selected)
+    original = build(stage, selected, controller_variant)
     item = next((copy.deepcopy(j) for j in original["jobs"] if j["trial_id"] == trial_id), None)
     if item is None:
         raise SystemExit(f"{trial_id} is not a job of stage {stage}")
@@ -370,7 +470,7 @@ def clearance_report(document: dict) -> str:
         if mission["mission_id"] in seen:
             continue
         seen.add(mission["mission_id"])
-        rows = [(p["label"], floor_clearance(p, geometry)) for p in mission["poses"]]
+        rows = [(p["label"], floor_clearance(p, geometry)) for p in floor_poses(mission)]
         label, value = min(rows, key=lambda row: row[1])
         note = " (recorded v1, not for new stages)" if item["context"]["mission_key"] in RECORDED_ONLY else ""
         lines.append(f"floor clearance {mission['mission_id']}: minimum {value:.3f} m at {label}{note}")
@@ -384,13 +484,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, help="write the jobs file here instead of stdout")
     parser.add_argument("--rerun", metavar="TRIAL_ID", help="emit only this job of the stage, as <trial_id>-rerun1")
     parser.add_argument("--write-missions", action="store_true", help="regenerate the mission files and exit")
+    parser.add_argument("--controller-variant", choices=tuple(CONTROLLER_VARIANTS), default="upstream",
+                        help="M3 stages: the controller arm (piccard-experiments#88 M3-C); keep_xy_integral "
+                             "names the variant recipe")
     args = parser.parse_args(argv)
     if args.write_missions:
         write_missions()
         return 0
     if not args.stage:
         parser.error("--stage is required")
-    document = rerun(args.stage, args.selected, args.rerun) if args.rerun else build(args.stage, args.selected)
+    document = (rerun(args.stage, args.selected, args.rerun, args.controller_variant) if args.rerun
+                else build(args.stage, args.selected, args.controller_variant))
     sys.stderr.write(clearance_report(document))
     text = json.dumps(document, indent=2, sort_keys=True) + "\n"
     if args.out:

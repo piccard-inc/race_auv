@@ -1,5 +1,7 @@
 # RACE AUV
 
+**Docking trials (piccard/docking-recipe):** [piccard_docking_recipe/RUN.md](piccard_docking_recipe/RUN.md) runs one from a fresh checkout to a scored result.
+
 ## Introduction
 This is the configuration for the RACE AUV on the ROS2-MVP framework.
 - ROS2 version Jazzy
