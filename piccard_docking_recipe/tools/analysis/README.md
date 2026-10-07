@@ -203,3 +203,140 @@ dock point on each axis, and ±0.05 rad. At nominal gains M1 never enters it.
 It reproduces the staging numbers: minimum distance 0.737 m, hold dwell-end distance 1.722 m, overshoot 0.764 m
 (13.9 %). Under v0.2, the approach step settles at 195.3 s with a steady-state stop-short of 0.158 m. At the hold
 end, 0.147 m of the 0.165 m lateral error is frame drift.
+
+# RACE M3 dock-criterion metrics
+
+`race_m3_metrics.py` computes the M3 dock-criterion metrics (piccard-physical-ai #108, protocol piccard-experiments
+#88) for race-auv-docking trial directories: pose missions and planner missions alike. It reads `trial.json`,
+`docking.json` and `telemetry.jsonl`, and reuses the loaders of `race_m2_metrics.py`.
+
+```bash
+python3 tools/analysis/race_m3_metrics.py /path/to/job-1/ [/path/to/job-2/ ...] --output-dir out/ \
+  [--hold-s 30] [--speed-limit-mps 0.1] [--meshes /path/to/world_of_stonefish/meshes] [--matrix] \
+  [--clearance-m 0.02 --clearance-tol-m 0.005]
+```
+
+It writes, per trial:
+- `<trial>.m3.json`, with a `definitions` block and a `claim_boundary`;
+- `<trial>.m3-perception.jsonl`, the full-rate fused-minus-truth series.
+
+With `--matrix` it also writes `m3-matrix.json` and `m3-matrix.md`.
+
+All quantities are ground truth, from the collector's dock rows. The dock points use the offsets of
+`runtime/docking_metric.py`, the same ones `race_m2_metrics` and contact-margin v1.1 use.
+- **Gap:** the dock-point distance. It is reported as a 1 s series, its minimum, and the vertical offset and
+  (with meshes) the coupling separation at that minimum. The minimum horizontal gap (along and lateral in the
+  station dock frame) is reported too. With meshes, both minima name every AUV part's separation from every station
+  part and the closest pair: on M3-0 v1.2 that was the left leg over the station frame, 3.5 mm.
+- **Closure:** the first dock row with a gap of 0.02 m or less, and separately 0.01 m or less. `time_to_closure_s`
+  counts from the mission start (the dive's start).
+- **Speed at closure:** the speed of the AUV dock point relative to the station dock point: a central difference
+  of the relative position over ±0.5 s, in the station dock frame. Also its maximum over the final approach, which
+  runs from the last crossing of the 0.3 m stand-off to closure.
+- **Hold:** the `hold_s` after each closure (default 30 s). It reports the fraction of dock rows within the
+  threshold and the maximum and mean gap. **Docked** means every row of the whole hold is within the threshold,
+  and the hold is observed: inside the mission window, with no dock-row gap over 1 s.
+- **Dock criterion:** the lab's criterion also bounds the entry speed. `speed_ok` is the speed at closure against
+  `--speed-limit-mps` (default 0.1 m/s; null without a speed), and `docked_at_speed` is docked and `speed_ok`. The
+  matrix counts `docked` and `docked_at_speed` per threshold. The planner's `speed_cap_mps` caps the commanded set
+  point; it is not this limit.
+- **Closure at clearance (protocol v1.3):** the simulated controller cannot descend onto the dock without a depth
+  step, so v1.3 holds the AUV dock point `approach_clearance_m` above the station's, and #88 redefines the
+  criterion as the hover there.
+  - With `--clearance-m c --clearance-tol-m tol` (tol > 0), `closure_at_clearance` scores, per threshold, the
+    first dock row whose horizontal gap is within the threshold and whose `vertical_offset_m` is within tol of −c.
+  - Speed, hold (every hold row meeting both), load and coupling follow the same logic as closure. Its gap fields
+    hold the horizontal gap.
+  - The 3D-gap `closure` is reported alongside, unchanged. Without a tolerance (the default) it is not scored.
+  - `clearance.planner_approach_clearance_m` is the trial's planner value.
+  - The matrix adds `at_clearance` per threshold and counts, and a second markdown table.
+- **First full hold (protocol v1.5):** #88 preregistered this as v1.5's definition of docked, for trials run after
+  it: a `hold_s` window inside the final stage in which the criterion holds continuously, entered at
+  `--speed-limit-mps` or less. The criterion is existential: any such window counts, not only the first.
+  - **What is scored.** Each closure, 3D and at clearance, per threshold, carries:
+    - `first_full_hold`, the first full window: its entry, its time into the final stage, the entry speed and
+      `speed_ok`, and the window's gap, vertical offset, load and coupling;
+    - `first_full_hold_at_speed`, the first full window entered at the speed limit or less, with the same fields.
+      It is null when no full window was, or when a window's speed cannot be measured;
+    - `docked_any_window` (a full window exists) and `docked_any_window_at_speed`
+      (`first_full_hold_at_speed` exists).
+  - **The window.** Every dock row in it must meet the criterion, and the window must be observed: inside the
+    mission, with no dock-row gap over 1 s. A window starts at the first row of a run, or at the first row after a
+    dock-row gap: where the vehicle entered.
+  - **The final stage.** For a planner mission it is the last planner stage (trial.json `planner.stages`). For a pose
+    mission it is the last pose: from the first dock row carrying its label. Without either, `first_full_hold` is
+    not computed and says why.
+  - **Which definition a trial is scored by.** `criterion.scored` is `first_full_hold` from `protocol_version`
+    v1.5, and `first_closure` before it or without a version. Both results are always reported.
+    `criterion.final_stage` says where the final stage starts, and from what record.
+  - **The matrix.** It adds per trial:
+    - `criterion`;
+    - `any_window` per threshold, 3D and at clearance, with the first full window's entry and the at-speed one's;
+    - totals for `docked_any_window`, `docked_any_window_at_speed`, `scored_docked` and `scored_docked_at_speed`,
+      where "scored" uses each trial's own definition;
+    - a markdown table.
+  - M3-0 v1.4, for example, stays scored on its first closure: not docked. It reports a 2 cm at-clearance full hold
+    from collector t 484.3, which is informational.
+- **Load during the hold:** contact events in the v0.3 classes, the maximum normal force (a lower bound: history
+  1) and the fraction of 0.5 s bins with a force-bearing event.
+- **Coupling (with `--meshes`):**
+  - The separations are whole-mesh and couplink to couplink, at closure and at each second of the hold.
+  - The meshes are placed by `contact_margin_check_v1_1.py`, imported. That file is the tool that produced
+    `contact-margin-v1.1.json`, byte-identical to the served copy (sha256 `87e18278…`).
+  - `--meshes` is a directory holding the six collision meshes of the pinned world_of_stonefish `d51d59e`
+    (`data/parts/…` and `data/objects/…`). This path needs numpy.
+- **Vertical offset:** z_W(AUV dock point) − z_W(station dock point). World z points down, so a negative value
+  means the AUV dock point is shallower.
+- **Time basis:** every `*_t` field is collector time, seconds on the collector's monotonic clock at receipt.
+  `time_basis` holds `mission_start_t` (the dive's start) and `mission_end_t`; mission time is
+  `t - mission_start_t`. `time_to_closure_s` is already mission time.
+- **Frames and signs:** `definitions.frames_and_signs` gives both vertical conventions. The dock rows' relative
+  position has z up, while `vertical_offset_m` uses world z down, so one position reads +0.0229 m and −0.0229 m.
+  `true_range` is measured from the AUV's base_link, 0.395 m aft of its dock point and 0.13 m above it, so it is
+  not the gap.
+- **Run provenance:** `context.role` and `context.protocol_version` come from the job context (the campaign builder
+  writes `protocol_version` for the M3 planner arm: v1.5 from #88). `mission_matches_context` tells
+  whether the context's `mission_sha256` is this trial's mission, and `mission_hash_form` says in which form:
+  - `runtime`: trial.json's hash of the bytes the runtime received;
+  - `builder`: the builder's rendering. The submit path renders integral floats as integers, so this form casts
+    back every value the builder wrote as a float.
+- **Controller variant:** `controller_variant` and `mvp_control_patch`, from trial.json. `upstream` is the lab's
+  mvp_control as pinned; `keep_xy_integral` is Piccard's variant (M3-C). The matrix carries it per trial. null means the
+  trial was recorded before the field existed, and ran upstream.
+- **Plain words:** `status_plain` and `stop_reason_plain`; `budget_censored` reads "ran to the horizon without
+  completing".
+- **Planner timeline:** `planner.timeline` holds:
+  - `handover_t` and each stage's `start_t` (`stage` is an index into `standoffs_m`);
+  - `stale_intervals`;
+  - `setpoint_steps`, as `[t, x, y, z, yaw]` of cg_link in `race_auv/world_ned`. They come from trial.json when
+    the collector recorded them, else from the planner telemetry rows (`source` says which);
+  - `heading_rehold` (v1.2): the final stage's heading re-hold from trial.json. It records `samples`, `applied`,
+    `previous`, `heading`, and `received_t` in collector time;
+  - `approach_clearance_m` (v1.3) from trial.json;
+  - `final_along` (v1.5) from trial.json: the final stage's along phase (`approach` or `hold`) and side, each
+    arrival (`t` on the planner's clock, `error_m`, `side`, `change_m`, `received_t`) and each re-approach.
+
+  `definitions.planner_frame` and `planner_stage` give the error frame L (level station frame at the held heading),
+  and the stage-advance rule with the lateral band `band_m + s · band_rad`.
+- **Tags:** the forward camera's tag layout in the station dock frame, from trial.json `tags` or, for older trials,
+  the planner's `tag_pivot` record. It includes `forward_collinearity_m`, the tags' largest distance from one line:
+  8.3 mm for cam_front's 146/541/558, which lie on the station's vertical centreline. It also counts the detection
+  rows per camera and tag id in the mission window.
+- **Perception:** at each `fused_dock` sample in the mission, the fused station dock point minus ground truth, in
+  `race_auv/base_link`: range, lateral, vertical and yaw. The truth is the dock row nearest in time, within 0.1 s.
+  - `perception.by_true_range` bins the samples by true range, and `by_forward_tags` by the cam_front ids seen
+    within the fuser's 0.5 s detection age. Each bin gives n, mean and sd.
+  - The series goes to `<trial>.m3-perception.jsonl` as
+    `[t, true_range_m, range_m, lateral_m, vertical_m, yaw_rad, forward_tags]`.
+  - The claim boundary excludes perception accuracy: these numbers describe the simulation's rendered tags and the
+    pinned fuser, not the lab's hardware.
+- **Planner provenance:**
+  - `trial.json` `planner` is `{node, parameters, parameters_sha256}`. `parameters_sha256` is the sha256 of the
+    parameters as JSON with sorted keys and no spaces. The block is null or absent when no planner ran.
+  - Each consumption audit's `planner_inputs.reads_only_fuser_tf_and_odometry` is read too.
+  - A missing verdict, a false one or a hash mismatch excludes the trial.
+
+On the M2 R-B contact trials, neither run closes at 2 cm:
+- N reaches a minimum gap of 0.067 m, p10 0.024 m.
+- At the minimum, the AUV dock point sits 21.9 mm shallow, with a couplink separation of 19.3 mm (N) and 19.4 mm
+  (p10). That is contact-margin v1.1's recorded-pose result.

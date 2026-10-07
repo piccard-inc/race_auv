@@ -93,12 +93,34 @@ class RaceConformanceTests(unittest.TestCase):
                                  "dwell_s": mission_module.DWELL_BOUNDS_S}.items():
             self.assertEqual((pose[key]["minimum"], pose[key]["maximum"]), (low, high))
         self.assertEqual(set(defs["pose"]["required"]), mission_module.POSE_FIELDS)
-        self.assertEqual(defs["mission"]["properties"]["apriltag_tag_size"]["enum"],
-                         list(mission_module.TAG_SIZE_CONVENTIONS))
+        for kind in ("pose_mission", "planner_mission"):
+            self.assertEqual(defs[kind]["properties"]["apriltag_tag_size"]["enum"],
+                             list(mission_module.TAG_SIZE_CONVENTIONS))
         gain = defs["gain"]["allOf"][1]
         self.assertEqual(gain["maximum"], prepare_candidate.GAIN_CEILING)
         for field in ("p", "i", "d", "v"):
             self.assertEqual(RECIPE["development_bounds"][field], gain)
+
+    def test_planner_mission_bounds_match_the_runtime(self):
+        defs = SCHEMA["$defs"]
+        self.assertEqual(defs["mission"]["oneOf"], [{"$ref": "#/$defs/pose_mission"}, {"$ref": "#/$defs/planner_mission"}])
+        self.assertEqual({kind: defs[kind]["properties"]["schema"]["const"] for kind in ("pose_mission", "planner_mission")},
+                         {"pose_mission": mission_module.SCHEMA, "planner_mission": mission_module.PLANNER_SCHEMA})
+        planner_mission = defs["planner_mission"]
+        self.assertEqual(set(planner_mission["required"]), mission_module.PLANNER_REQUIRED)
+        self.assertEqual(planner_mission["properties"]["fallback_pose"], {"$ref": "#/$defs/pose"})
+        planner = defs["planner"]
+        self.assertEqual(set(planner["required"]), mission_module.PLANNER_FIELDS)
+        for key, (low, high) in mission_module.PLANNER_BOUNDS.items():
+            self.assertEqual((planner["properties"][key]["minimum"], planner["properties"][key]["maximum"]), (low, high))
+        for key, (length, (low, high)) in mission_module.PLANNER_VECTORS.items():
+            vector = planner["properties"][key]
+            self.assertEqual((vector["type"], vector["minItems"], vector["maxItems"]), ("array", length, length))
+            self.assertEqual((vector["items"]["minimum"], vector["items"]["maximum"]), (low, high))
+        standoffs = planner["properties"]["standoffs_m"]
+        self.assertEqual((standoffs["items"]["minimum"], standoffs["items"]["maximum"]), mission_module.STANDOFF_BOUNDS_M)
+        self.assertEqual(standoffs["maxItems"], mission_module.MAX_STAGES)
+        self.assertEqual(RECIPE["mission_schemas"], [mission_module.SCHEMA, mission_module.PLANNER_SCHEMA])
 
     def test_recipe_records_the_source_lock_and_base_image(self):
         self.assertEqual(RECIPE["source_lock_sha256"],

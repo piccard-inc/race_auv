@@ -34,14 +34,16 @@ def main():
     parser.add_argument("--collector-pid", type=int, default=0)
     parser.add_argument("--video-pid", type=int, default=0)
     parser.add_argument("--xvfb-pid", type=int, default=0)
+    parser.add_argument("--watch-pid", type=int, default=0)
     parser.add_argument("--view-pid", type=int, default=0)
     parser.add_argument("--onboard-pid", type=int, default=0)
+    parser.add_argument("--planner-pid", type=int, default=0)
     parser.add_argument("--video-requested", type=int, choices=(0, 1), required=True)
     parser.add_argument("--onboard-requested", type=int, choices=(0, 1), default=0)
     args = parser.parse_args()
     root = Path(args.output)
     groups = {}
-    for label in ("launch", "collector", "video", "view", "onboard", "xvfb"):
+    for label in ("launch", "collector", "video", "view", "onboard", "planner", "xvfb", "watch"):
         pid = getattr(args, label + "_pid")
         alive = False
         if pid > 0:
@@ -66,8 +68,11 @@ def main():
     inventory = []
     for name in ("telemetry.jsonl", "trial.json", "docking.json", "candidate.json",
                  "candidate-install-verification.json", "apriltag-black-square-edge.yaml", "launch.log",
-                 "collector.log", "display.mp4", "display-poster.png", "media.json", "follow-view.json",
-                 "cam_front.mp4", "cam_front-poster.png", "cam_front-frames.csv", "onboard-recorder.json"):
+                 "collector.log", "planner.log", "display.mp4", "display-poster.png", "media.json", "follow-view.json",
+                 "cam_front.mp4", "cam_front-poster.png", "cam_front-frames.csv", "onboard-recorder.json",
+                 # #122: the display and the helpers' own logs (wrapper.log is still open here, so not listed)
+                 "glxinfo.txt", "display-watch.jsonl", "display-watch.log", "xvfb.log", "ffmpeg.log", "media.log",
+                 "follow-view.log", "onboard-recorder.log"):
         path = root / name
         if not path.is_file():
             continue

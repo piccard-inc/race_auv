@@ -1,8 +1,9 @@
 # Piccard race-auv-docking recipe: snapshot for the SOS Lab
 
-Exported from piccard-inc/piccard-physical-ai at commit 9693ddb38fba57cbe00ac34c2fe3dc82df4ec35d (committed 2026-09-30) by
+Exported from piccard-inc/piccard-physical-ai at commit 148f17b45ee60c7997a3db12356e38ddf4718a2a (committed 2026-10-07) by
 `tools/release/export_race_auv_docking_snapshot.py`. It is the layer that ran the trials reported at
-piccard.science/experiments/race-auv-docking-approach-2026-09. Nothing here runs against the lab's hardware. The
+piccard.science/experiments/race-auv-docking-approach-2026-09 and
+piccard.science/experiments/race-auv-docking-planner-2026-10. Nothing here runs against the lab's hardware. The
 container base image is private, so the Dockerfile is for reading.
 
 ## Layout
@@ -14,11 +15,13 @@ The paths are the repository's own, so the tools and tests run from this directo
   - The example requests. `examples/m3-default-request.json` reads the tag sizes as the black-square edge
     (`black_square_edge`); `examples/m1-smoke-request.json` keeps the lab's configured sizes (`lab_configured`).
   - `runtime/`: install, launch, the scenario wrapper, the collector, the mission validator, the docking metric,
-    the media recorders and the supervisors.
+    the media recorders, the supervisors, the simulator seed and the native runner (`run_native_trial.sh`).
+  - `simulator-patches/`: `stonefish_seed_v1`, the optional Stonefish patch that makes the sensor-noise seed
+    settable and printed.
   - `campaigns/`: the M2 missions and the tank floor.
 - `tools/campaigns/`: the mission and jobs-file builder, the tank-floor extractor, and their tests.
-- `tools/analysis/`: the M2 metrics, the recording-isolation check and the onboard-load check, with their
-  `README.md` and the metrics and onboard-load tests.
+- `tools/analysis/`: the M2 and M3 metrics, the contact-margin check, the recording-isolation check and the
+  onboard-load check, with their `README.md` and the metrics and onboard-load tests.
 
 Below, a path that starts with neither `packages/` nor `tools/` is relative to `packages/simulation/race-auv-docking/`.
 
@@ -99,6 +102,7 @@ The export ran these from this directory, with Python 3, PyYAML and jsonschema, 
     PYTHONPATH=packages/simulation/race-auv-docking/runtime python3 packages/simulation/race-auv-docking/test_conformance.py
     python3 tools/campaigns/test_build_phase_r_campaign.py
     python3 tools/analysis/test_race_m2_metrics.py
+    python3 tools/analysis/test_race_m3_metrics.py
     python3 tools/analysis/test_race_onboard_load_check.py
 
 `tools/analysis/README.md` describes the tools' command lines. They recompute the metrics from a trial's served
@@ -111,11 +115,20 @@ Changed, and nothing else:
   `recipe-v1.json` and `source-lock-v1.json`.
 - `recipe-v1.json`'s `source_lock_sha256` and `conformance-v1.json`'s recipe hash are refreshed to the scrubbed
   files, so `test_conformance.py` holds here.
+- `conformance-v1.json` drops the contract source of a file left out below (the controller-variant recipe).
 
 Left out:
 - `packages/simulation/race-auv-docking/fixtures/`: trial outputs
 - `packages/simulation/race-auv-docking/runtime/test_race_runtime.py`: reads fixtures/
+- `packages/simulation/race-auv-docking/runtime/test_planner.py`: reads fixtures/ (replays of recorded trials, which carry ground truth); the lab branch's race_auv_docking_planner package holds the planner's fixture-free tests
 - `packages/simulation/race-auv-docking/Dockerfile.dockerignore`: the private build's context filter
+- `packages/simulation/race-auv-docking/native_bridge/`: source-only internal sensor/EKF bridge candidate; not used by the lab recipe
+- `packages/simulation/race-auv-docking/controller-variants/`: Piccard's internal controller variants (keep_xy_integral, piccard-experiments#88 M3-C, retired; actuator_fix_v1, native actuator correction): separate modifications of the lab's GPL-3.0 mvp_control, left out of the lab snapshot: its patch and build helper
+- `packages/simulation/race-auv-docking/Dockerfile.controller-variant`: Piccard's internal controller variants (keep_xy_integral, piccard-experiments#88 M3-C, retired; actuator_fix_v1, native actuator correction): separate modifications of the lab's GPL-3.0 mvp_control, left out of the lab snapshot: its image build
+- `packages/simulation/race-auv-docking/Dockerfile.controller-variant.dockerignore`: Piccard's internal controller variants (keep_xy_integral, piccard-experiments#88 M3-C, retired; actuator_fix_v1, native actuator correction): separate modifications of the lab's GPL-3.0 mvp_control, left out of the lab snapshot: its build's context filter
+- `packages/simulation/race-auv-docking/recipe-keepxyint-v1.json`: Piccard's internal controller variants (keep_xy_integral, piccard-experiments#88 M3-C, retired; actuator_fix_v1, native actuator correction): separate modifications of the lab's GPL-3.0 mvp_control, left out of the lab snapshot: its recipe (a copy of recipe-v1.json's hashes, which the scrub changes); its contract source is dropped here
+- `packages/simulation/race-auv-docking/provenance/`: Piccard build evidence (raw image build logs, in-image records and registry receipts for its internal controller-variant images), not lab material
+- `packages/simulation/race-auv-docking/provenance/native-harness/`: Piccard run evidence from its internal native no-physics harness (host and container logs and receipts), not lab material
 - `tools/analysis/fixtures/`: trial outputs
 - `tools/analysis/test_race_m2_metrics_m1.py`: runs on the M1 trial fixture
 - `tools/analysis/test_recording_isolation_check.py`: runs on RISE trials through the RISE evaluation package, which is not part of this recipe

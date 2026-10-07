@@ -16,10 +16,12 @@ while (($#)); do
   esac
 done
 [[ -n "$output" && -n "$expected" && -f "$expected" && -n "$mission" && -f "$mission" ]] || {
-  echo "Campaign output, expected gains and pose mission are required" >&2
+  echo "Campaign output, expected gains and mission are required" >&2
   exit 64
 }
 mkdir -p "$output"
+# #122: the wrapper's own stdout and stderr also land in the output directory (the host keeps container.log)
+exec > >(tee -a "$output/wrapper.log") 2>&1
 python3 "$script_dir/prepare_candidate.py" install \
   --gains "$expected" --mission "$mission" --workspace /opt/race_ws --output "$output"
 python3 "$script_dir/prepare_candidate.py" verify \
