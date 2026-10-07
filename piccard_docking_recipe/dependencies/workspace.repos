@@ -1,0 +1,50 @@
+# The RACE docking simulation's colcon workspace, pinned. Every version is a full commit except race_auv, which is
+# this repository's piccard/docking-recipe branch (the vehicle, reviewed at its head).
+#   mkdir -p ws/src && vcs import ws/src < piccard_docking_recipe/dependencies/workspace.repos
+# Build Stonefish and apriltag from libraries.repos first; DEPENDENCIES.md has the flags, the workspace changes and
+# the licences. This is the set the Piccard docking image builds; alpha_rise_auv, which shares its base, is not needed.
+repositories:
+  race_auv:
+    type: git
+    url: https://github.com/piccard-inc/race_auv.git
+    version: piccard/docking-recipe
+  race_auv/race_auv_sim:
+    type: git
+    url: https://github.com/GSO-soslab/race_auv_sim.git
+    version: 3601a30f49c7b8ddac2845c41c99af8af92c0e65
+  race_auv/race_auv_perception:
+    type: git
+    url: https://github.com/GSO-soslab/race_auv_perception.git
+    version: 5944d5a6ebd44601bcc5579e91b82d5d1b3735cb
+  race_station:
+    type: git
+    url: https://github.com/GSO-soslab/race_station.git
+    version: 100bc5a7ac253172b527c036d637da5482eaf0f3
+  world_of_stonefish:
+    type: git
+    url: https://github.com/GSO-soslab/world_of_stonefish.git
+    version: d51d59e77211a436a0c3617c30a80c36337cdbbc
+  stonefish_ros2:
+    type: git
+    url: https://github.com/GSO-soslab/stonefish_ros2.git
+    version: a7c9be9c50c4e851d045d278ef3e641641673b70
+  mvp_msgs:
+    type: git
+    url: https://github.com/uri-ocean-robotics/mvp_msgs.git
+    version: 7aa616fab3bdd26dcd4ad178c4bfcd48c4231480
+  mvp_control:
+    type: git
+    url: https://github.com/uri-ocean-robotics/mvp_control.git
+    version: 6cfea2d5c1e371bd371aa6587066d27c617c55ad
+  mvp_mission:
+    type: git
+    url: https://github.com/uri-ocean-robotics/mvp_mission.git
+    version: 84cce537aa08267eb65bcf2b9ea65a27d81bd6f0
+  mvp_utilities:
+    type: git
+    url: https://github.com/uri-ocean-robotics/mvp_utilities.git
+    version: 0c475d3ffe9ea8407caf640e70f9f7d8b86c3331
+  acomms_msgs:
+    type: git
+    url: https://github.com/GSO-soslab/acomms_msgs.git
+    version: 06240feb09c2413c8316fb969e7bbe4bd836d799
