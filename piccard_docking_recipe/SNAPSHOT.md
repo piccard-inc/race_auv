@@ -1,6 +1,6 @@
 # Piccard race-auv-docking recipe: snapshot for the SOS Lab
 
-Exported from piccard-inc/piccard-physical-ai at commit 148f17b45ee60c7997a3db12356e38ddf4718a2a (committed 2026-10-07) by
+Exported from piccard-inc/piccard-physical-ai at commit c1530a4ab987f43777e9c28398c4738f6438f8a6 (committed 2026-10-08) by
 `tools/release/export_race_auv_docking_snapshot.py`. It is the layer that ran the trials reported at
 piccard.science/experiments/race-auv-docking-approach-2026-09 and
 piccard.science/experiments/race-auv-docking-planner-2026-10. Nothing here runs against the lab's hardware. The

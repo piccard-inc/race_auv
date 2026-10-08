@@ -536,6 +536,8 @@ class TimeAndWordsTests(unittest.TestCase):
                 ("failed", "consumption_audit:planner_reads_other_inputs,x"): (
                     "failed", "the consumption audit found a problem (planner_reads_other_inputs, x)"),
                 ("failed", "signal_2"): ("failed", "stopped by signal 2"),
+                ("failed", "perception_not_running:cam_front,cam_down"): (
+                    "failed", "the AprilTag detectors were not publishing before the mission (cam_front, cam_down)"),
                 ("failed", "some_new_reason"): ("failed", "some new reason")}.items():
             with self.subTest(reason=reason):
                 self.assertEqual((m3.plain(m3.STATUS_PLAIN, status), m3.plain(m3.STOP_REASON_PLAIN, reason)), words)

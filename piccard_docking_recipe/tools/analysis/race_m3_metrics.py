@@ -121,6 +121,9 @@ def plain(mapping: dict, value) -> str | None:
         return "the consumption audit found a problem (" + text.split(":", 1)[-1].replace(",", ", ") + ")"
     if text.startswith("signal_"):
         return f"stopped by signal {text[len('signal_'):]}"
+    if text.startswith("perception_not_running:"):
+        return ("the AprilTag detectors were not publishing before the mission ("
+                + text.split(":", 1)[1].replace(",", ", ") + ")")
     return mapping.get(text, text.replace("_", " "))
 
 

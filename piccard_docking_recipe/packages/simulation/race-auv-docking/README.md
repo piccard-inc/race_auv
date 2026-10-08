@@ -36,7 +36,7 @@ Tracking: piccard-inc/piccard-physical-ai#79 (milestone piccard-experiments #87)
 | `runtime/tag_pivot.py` | The planner's tag pivot: the forward camera's tag centroid in the station dock frame, derived from the `apriltag.yaml` and station URDF the fuser loads. The collector checks the mission's `tag_pivot_m` against it. |
 | `runtime/launch/docking_sim.launch.py` | The trial's launch file. It mirrors upstream `bringup_simulation.launch.py` with no rviz, joystick or C2, and adds the station and the ground-truth node. |
 | `runtime/scenario/race_auv_docking_trial.scn` | The upstream `race_auv_test.scn`, included unchanged, plus AUV↔station and AUV↔tank contact monitors. |
-| `runtime/collect_trial.py` | Readiness, consumption audit, gain readback, `direct_control`, the pose loop or the planner handover, telemetry, `trial.json` and `docking.json`. |
+| `runtime/collect_trial.py` | Readiness, the perception gate (planner missions), consumption audit, gain readback, `direct_control`, the pose loop or the planner handover, telemetry, `trial.json` and `docking.json`. |
 | `runtime/graph_audit.py` | The consumption audit `collect_trial.py` runs: what the helm and controller consume, and whether ground truth reaches the vehicle stack. It needs no YAML or ROS, so the native bridge's evidence check recomputes it from an archived graph. |
 | `runtime/docking_metric.py` | Pure-Python dock-point geometry, frame validation and the `docking.json` summary. |
 | `runtime/check_image.py` | Build-time check against the real pinned files. |
@@ -232,6 +232,11 @@ There is no stand-off floor. The collector records the measured alignment and th
    - **Readiness:** helm in `start`; controller values, both ground-truth odometries and the EKF odometry are
      flowing; services are up; the DirectControl subscriber is present; the `race_auv/world_ned → race_auv/cg_link`
      TF resolves.
+   - **Perception (a planner mission):** within 30 s of readiness, both AprilTag detectors must be running. Each
+     camera's `apriltag_detection/detections3d` topic needs a publisher and an array no older than 5 s. The detector
+     publishes one on every tick once frames arrive, with tags in view or none. Otherwise the trial fails as
+     `perception_not_running:<cameras>` before the mission, and the scorer excludes it. verify-planner-1 ran to its
+     horizon with both detectors dead from startup (`provenance/verification-185/verify-planner-1/`).
    - **Audit:** records every node's subscriptions and the `/tf` publishers and edges. The trial fails if:
      - the helm or controller consume odometry other than `/race_auv/odometry/filtered`;
      - a vehicle node subscribes to ground truth;
