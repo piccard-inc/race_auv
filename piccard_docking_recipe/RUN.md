@@ -18,7 +18,9 @@ curl -fsSLO "$BRANCH/piccard_docking_recipe/dependencies/workspace.repos"
 vcs import libs < libraries.repos
 vcs import ws/src < workspace.repos
 
-# 2. Stonefish and apriltag, installed to /usr/local: from ~/race/libs, the commands in DEPENDENCIES.md ("Libraries").
+# 2. Stonefish and apriltag, installed to /usr/local: from ~/race/libs, the commands in DEPENDENCIES.md ("Libraries"),
+#    including apriltag's last block, which makes its Python module importable and checks it (the install alone
+#    leaves it where Ubuntu's python3 does not look).
 #    To record the simulator seed, apply stonefish_seed_v1 to Stonefish first (see "The simulator seed" below).
 
 # 3. The workspace changes, then the build (DEPENDENCIES.md, "Workspace").
