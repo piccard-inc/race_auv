@@ -16,7 +16,10 @@
 #      with /tf and /tf_static remapped to /piccard/ground_truth/*. The planner comes from race_auv_docking_planner.
 #      The collector flies the dive or the poses, starts the planner, and writes trial.json and docking.json. The
 #      simulator seed is chosen and recorded as described in simulator_seed.py.
-#   5. race_m3_metrics.py: DIR/scored/<DIR name>.m3.json, the scored result.
+#   5. race_m3_metrics.py: DIR/scored/<DIR name>.m3.json, the scored result, scored as the report's trials were:
+#      the hover-at-clearance criterion with native_request.py scoring's arguments (the mission's approach clearance,
+#      within 0.01 m), and docked by the request context's protocol_version (the M3 examples': v1.5, the first full
+#      hold). The report's trials also passed --meshes, which adds only the mesh-separation (coupling) fields.
 #
 # The runner starts its own Xvfb display unless PICCARD_EXTERNAL_DISPLAY=1 (then DISPLAY or PICCARD_DISPLAY is used).
 # ROS 2 Jazzy is sourced from ROS_SETUP (default /opt/ros/jazzy/setup.bash). The exit status is run_trial.sh's.
@@ -64,6 +67,8 @@ if python3 -c 'import json,sys; sys.exit(json.load(open(sys.argv[1])).get("schem
     --output "$parts/planner-params.yaml"
   export PICCARD_PLANNER_PARAMS="$parts/planner-params.yaml"
 fi
+scoring_args="$(python3 "$script_dir/native_request.py" scoring --mission "$parts/mission.json")"
+read -r -a scoring <<<"$scoring_args"
 
 set +e
 "$script_dir/run_trial.sh" --output "$output" --horizon-seconds "$HORIZON_SECONDS" \
@@ -73,6 +78,7 @@ set +e
 status=$?
 set -e
 if [[ -f "$output/trial.json" ]]; then
-  python3 "$metrics" "$output" --output-dir "$output/scored" || echo 'race_m3_metrics failed; trial.json is kept' >&2
+  python3 "$metrics" "$output" --output-dir "$output/scored" "${scoring[@]}" \
+    || echo 'race_m3_metrics failed; trial.json is kept' >&2
 fi
 exit "$status"

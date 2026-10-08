@@ -68,7 +68,16 @@ counterpart of the runner that produced the report's trials. In order:
    - The collector (`runtime/collect_trial.py`) checks that the controller has the requested gains, flies the dive
      (and, for a pose mission, the poses), starts the planner after the dive, and writes `trial.json`, `docking.json`
      and `telemetry.jsonl`.
-4. **Scores it** with `tools/analysis/race_m3_metrics.py` into `<output>/scored/`.
+4. **Scores it** with `tools/analysis/race_m3_metrics.py` into `<output>/scored/`, the way the report's trials were
+   scored.
+   - **At clearance:** the simulated controller cannot descend onto the dock, so the docked state the report scores
+     is the AUV dock point held at the planner's approach clearance (0.02 m) above the station's, within 0.01 m
+     (`native_request.py scoring`). A pose mission, the control arm, is scored at the same 0.02 m. The 3D gap is
+     reported alongside.
+   - **By the first full hold:** the example requests' context names protocol v1.5. From v1.5, a trial is docked if
+     the criterion holds for a full 30 s window inside the final stage, and docked at speed if such a window was
+     entered at ≤ 0.1 m/s.
+   - The report's trials were also scored with `--meshes`, which adds only the mesh-separation fields.
 
 **Ground truth stays out of the vehicle.** The station's own `robot_state_publisher` and the ground-truth pose node run
 with `/tf` and `/tf_static` remapped to `/piccard/ground_truth/tf` and `/piccard/ground_truth/tf_static`.
