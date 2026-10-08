@@ -11,6 +11,18 @@ their source locks, which pin each archive by SHA-256 as well as by commit.
   python3-colcon-common-extensions, python3-rosdep, python3-venv, python3-vcstool, python3-yaml, libegl1-mesa-dev,
   libfreetype6-dev, libgl1-mesa-dev, libgl1-mesa-dri, ffmpeg, libglew-dev, libglm-dev, libsdl2-dev, libssl-dev,
   mesa-utils, x11-utils, xauth, xvfb, nlohmann-json3-dev, ros-jazzy-vision-msgs, python3-scipy, xdotool.
+- Python: `python3` must import Ubuntu's NumPy 1.26 (`python3-numpy`, in `/usr/lib/python3/dist-packages`).
+  - ROS 2 Jazzy's `cv_bridge` is compiled against NumPy 1.x. A NumPy 2 installed with pip into `/usr/local`, as some
+    GPU machine images ship, is imported first. The AprilTag detector then dies at startup, before the mission.
+  - The planner never gets a dock pose, so it holds at its first stage until the trial's wall timeout.
+  - The verification trial on such a host hit exactly that.
+  - apriltag's Python module compiles against whichever NumPy `python3` imports, so check before building it:
+
+        python3 -c 'import numpy; assert numpy.__version__.startswith("1.26.") and numpy.__file__.startswith("/usr/lib/python3/dist-packages/"), (numpy.__version__, numpy.__file__)'
+
+    If the check fails, remove the pip copy (`sudo python3 -m pip uninstall --break-system-packages numpy`) or start
+    from a clean Ubuntu 24.04. Run the check again. `cv2` must come from `/usr/lib/python3/dist-packages` as well
+    (`python3 -c 'import cv2; print(cv2.__file__)'`); a pip `opencv-python` shadows it the same way.
 
 ## Libraries (`libraries.repos`), installed to /usr/local first
 
@@ -72,6 +84,11 @@ Then build:
       --skip-keys "dwe_camera_driver race_auv_apriltag_cuda"
     CMAKE_BUILD_PARALLEL_LEVEL=2 colcon build --merge-install --executor sequential \
       --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+Then check that the detector's imports load together, as the detector node loads them:
+
+    source install/setup.bash
+    python3 -c 'from cv_bridge import CvBridge; CvBridge(); import cv2; from apriltag import apriltag'
 
 The image builds this as two workspaces. The base holds stonefish_ros2, the four mvp packages and acomms_msgs, with
 a world_of_stonefish at `55139d46` that the overlay shadows. The overlay holds race_auv, race_auv_sim,

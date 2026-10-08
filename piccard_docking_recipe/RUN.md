@@ -8,7 +8,9 @@ image, account or service: Ubuntu 24.04, ROS 2 Jazzy, a GPU-capable X display or
 
 ```bash
 # 0. Ubuntu 24.04 with ROS 2 Jazzy (ros-jazzy-ros-base) and the apt packages listed in
-#    piccard_docking_recipe/dependencies/DEPENDENCIES.md ("Target").
+#    piccard_docking_recipe/dependencies/DEPENDENCIES.md ("Target"). python3 must import Ubuntu's NumPy 1.26, not a
+#    pip NumPy 2 (with one, the AprilTag detector dies at startup; see "Target"):
+python3 -c 'import numpy; assert numpy.__version__.startswith("1.26.") and numpy.__file__.startswith("/usr/lib/python3/dist-packages/"), (numpy.__version__, numpy.__file__)'
 
 # 1. Every source, pinned.
 mkdir -p ~/race/libs ~/race/ws/src && cd ~/race
@@ -31,6 +33,8 @@ rm -f race_auv/race_auv_config/mvp_control_config/config.yaml race_auv/race_auv_
 cd ~/race/ws && source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src --ignore-src --rosdistro jazzy -r -y --skip-keys "dwe_camera_driver race_auv_apriltag_cuda"
 CMAKE_BUILD_PARALLEL_LEVEL=2 colcon build --merge-install --executor sequential --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash
+python3 -c 'from cv_bridge import CvBridge; CvBridge(); import cv2; from apriltag import apriltag'
 
 # 4. One trial. The planner arm:
 cd ~/race/ws/src/race_auv/piccard_docking_recipe
