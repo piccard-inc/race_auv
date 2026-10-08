@@ -36,8 +36,23 @@ v3.4.5, or Ubuntu's python3-apriltag, every detection falls back to an identity 
       -DPython3_EXECUTABLE=/usr/bin/python3
     sudo cmake --build apriltag-build --parallel 4 --target install && sudo ldconfig
 
-The image then links `libapriltag.so.3` next to the Python module and checks
-`from apriltag import apriltag; apriltag("tag36h11").estimate_tag_pose`.
+The install puts the Python module in `/usr/local/lib/python3.12/site-packages`, which Ubuntu's `python3` does not
+search (it reads `dist-packages`). The docking image's Dockerfile therefore makes the module importable in two
+steps, then checks it:
+1. it links `libapriltag.so.3` next to the module;
+2. it names the module's directory in a `.pth` file in `dist-packages`.
+
+On a host, the same commands with `sudo`:
+
+    module_dir="$(dirname "$(find /usr/local/lib -name 'apriltag*.so' -path '*python3*' | head -1)")"
+    sudo ln -sf /usr/local/lib/libapriltag.so.3 "$module_dir/libapriltag.so.3"
+    sudo mkdir -p /usr/local/lib/python3.12/dist-packages
+    test "$module_dir" = /usr/local/lib/python3.12/dist-packages || \
+      echo "$module_dir" | sudo tee /usr/local/lib/python3.12/dist-packages/piccard-apriltag.pth
+    python3 -c 'from apriltag import apriltag; assert callable(apriltag("tag36h11").estimate_tag_pose)'
+
+Without these steps the import fails with "cannot import name 'apriltag' from 'apriltag'". The verification trial
+on a fresh Ubuntu 24.04 host hit exactly that.
 
 ## Workspace (`workspace.repos`)
 
