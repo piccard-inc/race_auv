@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Bounded race-auv-docking/v1 trial. Never reads gain YAML files; reads back what the controller holds.
 
-readiness -> audit (who consumes odometry, TF and ground truth) -> gain readback -> first setpoint ->
-controller on -> helm direct_control -> pose mission -> trial.json and docking.json.
+readiness -> (a planner mission) both AprilTag detectors publishing -> audit (who consumes odometry, TF and ground
+truth) -> gain readback -> first setpoint -> controller on -> helm direct_control -> pose mission -> trial.json and
+docking.json.
 A planner mission (M3, #109) flies its fallback pose (the dive) the same way, then starts runtime/planner_fused_dock.py
 (a separate node, audited under planner_inputs), keeps the fallback set point until the planner's first command,
 stops publishing, and records the planner's stages until it reports complete.
@@ -51,6 +52,7 @@ PLANNER_ECHO_WINDOW_S = 2.0
 SETPOINT_PERIOD_S = 1.0
 SAMPLE_PERIOD_S = 0.5
 STALE_S = 5.0
+PERCEPTION_GATE_S = 30.0
 SETPOINT_ECHO_S = 10.0
 SOURCE_PINS = {"race_auv": "da58963c048228856dfdd5917da21a14edfa1985",
                "race_auv_sim": "3601a30f49c7b8ddac2845c41c99af8af92c0e65",
@@ -228,6 +230,14 @@ def track_stale(intervals: list, t: float, record: dict) -> None:
         intervals.append({"from_t": t, "to_t": None, "reason": reason})
 
 
+def perception_missing(last_array_t: dict, publishers: dict, now: float) -> list[str]:
+    """The cameras whose AprilTag detector is not running: no publisher on its detections topic, or no array within
+    STALE_S. The detector publishes an array on every tick once frames arrive, with tags in view or none, so this
+    asks for neither the dive nor a tag."""
+    return [camera for camera in DETECTIONS.values()
+            if publishers.get(camera, 0) < 1 or now - last_array_t.get(camera, -math.inf) > STALE_S]
+
+
 def end_audit_verdict(status: str, stop_reason: str, audit: dict) -> tuple[str, str]:
     """A trial is evidence only if the audit still holds when it ends: a completed or censored trial whose
     end-of-trial audit found a problem, or could not run, fails."""
@@ -277,6 +287,7 @@ def ros_node_class():
             self.stream = (self.root / "telemetry.jsonl").open("x", encoding="utf-8")
             self.latest_sim = None
             self.counts, self.last_t = {}, {}
+            self.detection_arrays, self.detection_last_t = {}, {}  # per camera
             self.latest = {}
             self.helm_state = None
             self.direct_control_seen = False
@@ -429,7 +440,10 @@ def ros_node_class():
                 fields.update(contact=CONTACTS[topic], location_m=xyz(start), normal_force_vector_n=force,
                               normal_force_n=math.sqrt(sum(value * value for value in force)))
             elif kind == "detections":
-                fields.update(camera=DETECTIONS[topic], count=len(msg.detections),
+                camera = DETECTIONS[topic]
+                self.detection_arrays[camera] = self.detection_arrays.get(camera, 0) + 1
+                self.detection_last_t[camera] = self.t()
+                fields.update(camera=camera, count=len(msg.detections),
                               ids=[detection.id for detection in msg.detections],
                               positions_m=[xyz(detection.results[0].pose.pose.position)
                                            for detection in msg.detections if detection.results])
@@ -675,6 +689,8 @@ def ros_node_class():
                 if self.t() >= ready_deadline:
                     raise TimeoutError("readiness_timeout")
                 self.spin()
+            if self.planner_mission:
+                self.perception_gate()
             self.discover_thrusters()
             if self.planner_mission and self.planner_latest.get("parameters_sha256") != self.planner_sha256:
                 raise RuntimeError("planner_parameters_mismatch")
@@ -710,6 +726,24 @@ def ros_node_class():
                 self.metadata.update(status="budget_censored", stop_reason="fixed_wall_horizon")
                 return
             self.metadata.update(status="completed", stop_reason="mission_complete")
+
+        def perception_gate(self):
+            """A planner mission steers by the AprilTag fuser, so both detectors must be running before the dive:
+            within PERCEPTION_GATE_S of readiness, or the run fails as perception_not_running. (verify-planner-1 ran
+            to its horizon with both detectors dead from startup.)"""
+            start = self.t()
+            while True:
+                publishers = {camera: self.count_publishers(topic) for topic, camera in DETECTIONS.items()}
+                missing = perception_missing(self.detection_last_t, publishers, self.t())
+                if not missing or self.t() - start >= PERCEPTION_GATE_S:
+                    break
+                self.spin()
+            gate = {"waited_s": self.t() - start, "publishers": publishers, "missing": missing,
+                    "arrays": {camera: self.detection_arrays.get(camera, 0) for camera in DETECTIONS.values()}}
+            self.metadata["perception_gate"] = gate
+            self.emit("event", event="perception_gate", **gate)
+            if missing:
+                raise RuntimeError("perception_not_running:" + ",".join(missing))
 
         def fly(self, pose):
             self.pose_started = start = self.t()

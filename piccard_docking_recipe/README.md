@@ -16,6 +16,7 @@ ground truth. Nothing in it runs on the vehicle, and no vehicle package depends 
 | `dependencies/` | The pinned sources, the build, the patches by hash, the licences. |
 | `tests/` | This branch's checks: the docking variants, the dependency manifest, the separation. |
 | `SNAPSHOT.md` | The piccard-physical-ai commit this directory was exported from. |
+| `results/` | One results note per commit of this branch that an experiment ran on: the page link, the record hash and the simulator seed. |
 
 The trial layer in `runtime/`:
 - the runners (`run_native_trial.sh`, `run_trial.sh`), the trial launch and the scenario wrapper with its contact
