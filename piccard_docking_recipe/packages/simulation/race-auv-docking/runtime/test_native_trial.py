@@ -1,5 +1,5 @@
 """The native trial path (run_native_trial.sh, native_request.py, run_trial.sh's native hooks). No ROS: the request
-split, the planner parameter file, and the scripts' order and hooks."""
+split, the planner parameter file, the scoring arguments, and the scripts' order and hooks."""
 import copy
 import hashlib
 import json
@@ -17,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 PACKAGE = HERE.parent
 PLANNER_REQUEST = json.loads((PACKAGE / "examples/m3-planner-request.json").read_text())
 POSE_REQUEST = json.loads((PACKAGE / "examples/m1-smoke-request.json").read_text())
+CONTACT_REQUEST = json.loads((PACKAGE / "examples/m3-contact-request.json").read_text())
 # planner.parameters_sha256 of the scored M3 planner trials at the 0.1 m/s cap: the example's values, as the submit
 # path wrote them (integral numbers as integers). race_auv_docking_planner pins the same hash for its v1.5 YAML.
 TRIAL_PARAMETERS_SHA256 = "12c05989447431826f1e082169eb572512e0b654301b564138f0c18d5ba5cc4d"
@@ -99,6 +100,36 @@ class PlannerParamsTests(unittest.TestCase):
             native_request.planner_params(copy.deepcopy(POSE_REQUEST["mission"]))
 
 
+class ScoringTests(unittest.TestCase):
+    """Scored as the report's trials were: race_m3_metrics --clearance-m 0.02 --clearance-tol-m 0.01, protocol v1.5."""
+
+    def test_both_m3_arms_are_scored_at_the_reports_clearance(self):
+        for request in (PLANNER_REQUEST, CONTACT_REQUEST):
+            self.assertEqual(native_request.scoring_args(copy.deepcopy(request["mission"])),
+                             ["--clearance-m", "0.02", "--clearance-tol-m", "0.01"])
+
+    def test_a_planner_mission_is_scored_at_its_own_approach_clearance(self):
+        mission = copy.deepcopy(PLANNER_REQUEST["mission"])
+        mission["planner"]["approach_clearance_m"] = 0.03
+        self.assertEqual(native_request.scoring_args(mission)[:2], ["--clearance-m", "0.03"])
+        mission["planner"]["approach_clearance_m"] = 0.5  # outside the mission's bounds
+        with self.assertRaises(ValueError):
+            native_request.scoring_args(mission)
+
+    def test_the_m3_examples_name_protocol_v1_5(self):
+        """The scorer reads the definition of docked from trial.json's comparison_context, the request's context."""
+        for request in (PLANNER_REQUEST, CONTACT_REQUEST):
+            self.assertEqual(request["context"]["protocol_version"], "v1.5")
+
+    def test_the_cli_prints_the_arguments_on_one_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            mission = Path(tmp) / "mission.json"
+            mission.write_text(json.dumps(PLANNER_REQUEST["mission"]))
+            result = subprocess.run(["python3", str(HERE / "native_request.py"), "scoring", "--mission", str(mission)],
+                                    capture_output=True, text=True, check=True, cwd=HERE)
+        self.assertEqual(result.stdout, "--clearance-m 0.02 --clearance-tol-m 0.01\n")
+
+
 class ScriptTests(unittest.TestCase):
     NATIVE = (HERE / "run_native_trial.sh").read_text()
     TRIAL = (HERE / "run_trial.sh").read_text()
@@ -106,8 +137,8 @@ class ScriptTests(unittest.TestCase):
     def test_the_native_runner_runs_the_steps_in_order(self):
         steps = ['native_request.py" split', 'source "$parts/limits.env"', 'prepare_candidate.py" install',
                  'prepare_candidate.py" verify', 'native_request.py" planner-params',
-                 'export PICCARD_PLANNER_PARAMS=', '"$script_dir/run_trial.sh"', 'status=$?', 'python3 "$metrics"',
-                 'exit "$status"']
+                 'export PICCARD_PLANNER_PARAMS=', 'native_request.py" scoring', 'read -r -a scoring',
+                 '"$script_dir/run_trial.sh"', 'status=$?', 'python3 "$metrics"', '"${scoring[@]}"', 'exit "$status"']
         positions = [self.NATIVE.index(step) for step in steps]
         self.assertEqual(positions, sorted(positions))
         self.assertIn('export PICCARD_NATIVE_WORKSPACE="$workspace"', self.NATIVE)

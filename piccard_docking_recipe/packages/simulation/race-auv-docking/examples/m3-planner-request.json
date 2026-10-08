@@ -162,6 +162,7 @@
       "docking.x/y": "M2 selection p10 (p 10, i 0.2, d 0, v 5, +/-15)"
     },
     "fallback_pose": "M1's dive (x_C -0.325, y_C 0.0, z_C 3.78, yaw 1.571, 40 s): derived from the station dock point like every M2 mission; the planner does not see it and takes over after its dwell",
-    "horizon": "stages end on settling, so the horizon (1800 s, v1.1) only bounds the trial; the planner reports complete after its final stage (120 s)"
+    "horizon": "stages end on settling, so the horizon (1800 s, v1.1) only bounds the trial; the planner reports complete after its final stage (120 s)",
+    "protocol_version": "v1.5"
   }
 }

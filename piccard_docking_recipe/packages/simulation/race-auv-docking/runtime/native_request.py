@@ -9,6 +9,10 @@ the race_auv_docking_planner parameter file for a planner mission.
   written with decimal points still gives the planner and the collector one hash. The values do not change.
 - planner-params: a planner mission -> the package's ROS parameter file: every planner parameter as a double (the
   vectors as double arrays), and initial_setpoint, the fallback pose the controller holds when the planner starts.
+- scoring: a mission -> race_m3_metrics.py's clearance arguments, as the report's trials were scored: the
+  hover-at-clearance criterion at the planner's approach_clearance_m (a pose mission, the control arm: 0.02 m, the
+  planner's), within 0.01 m. Which definition of docked applies is the request context's protocol_version (the M3
+  examples': v1.5, the first full hold), which the collector records in trial.json.
 
 The mission is checked here by mission.validate_mission; the gains by prepare_candidate at install, against the
 workspace's configured limits. No ROS.
@@ -26,6 +30,8 @@ from mission import is_planner_mission, validate_mission
 PLANNER_NODE = "piccard_planner"
 SETPOINT_FIELDS = ("x_m", "y_m", "z_m", "roll_rad", "pitch_rad", "yaw_rad")
 LIMITS = {"horizon_s": "HORIZON_SECONDS", "wall_timeout_s": "WALL_TIMEOUT_SECONDS"}
+POSE_MISSION_CLEARANCE_M = 0.02  # the report's control arm was scored at the planner arm's approach clearance
+CLEARANCE_TOLERANCE_M = 0.01  # the report's --clearance-tol-m
 
 
 def canonical(value):
@@ -74,6 +80,13 @@ def planner_params(mission: dict) -> dict:
                                                 "initial_setpoint": {key: float(pose[key]) for key in SETPOINT_FIELDS}}}}
 
 
+def scoring_args(mission: dict) -> list[str]:
+    """race_m3_metrics.py's clearance arguments for this mission, as the report's trials were scored."""
+    mission = validate_mission(mission)
+    clearance = mission["planner"]["approach_clearance_m"] if is_planner_mission(mission) else POSE_MISSION_CLEARANCE_M
+    return ["--clearance-m", repr(float(clearance)), "--clearance-tol-m", repr(CLEARANCE_TOLERANCE_M)]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="action", required=True)
@@ -83,9 +96,13 @@ def main(argv: list[str] | None = None) -> int:
     two = sub.add_parser("planner-params")
     two.add_argument("--mission", type=Path, required=True)
     two.add_argument("--output", type=Path, required=True, help="a new file")
+    three = sub.add_parser("scoring")
+    three.add_argument("--mission", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.action == "split":
         split(json.loads(args.request.read_text()), args.output)
+    elif args.action == "scoring":
+        print(" ".join(scoring_args(json.loads(args.mission.read_text()))))
     else:
         if args.output.exists():
             raise SystemExit(f"{args.output} exists; refusing overwrite")

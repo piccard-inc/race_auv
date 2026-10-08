@@ -603,7 +603,11 @@ The planner arm's request is `examples/m3-planner-request.json`, the control arm
      Its parameter file comes from the mission: the planner parameters, and the fallback pose as
      `initial_setpoint`.
    - A pose mission (the control arm) runs no planner; the collector flies the poses.
-4. **`tools/analysis/race_m3_metrics.py`** writes the scored result to `<output>/scored/`.
+4. **`tools/analysis/race_m3_metrics.py`** writes the scored result to `<output>/scored/`, scored as the report's
+   trials were:
+   - at clearance, at the mission's approach clearance (a pose mission: 0.02 m) within 0.01 m
+     (`native_request.py scoring`);
+   - docked by the request context's `protocol_version`, which for the M3 examples is v1.5, the first full hold.
 
 The runner starts its own Xvfb display unless `PICCARD_EXTERNAL_DISPLAY=1`. ROS 2 Jazzy is sourced from
 `ROS_SETUP` (default `/opt/ros/jazzy/setup.bash`). The exit status is `run_trial.sh`'s. The simulator seed is

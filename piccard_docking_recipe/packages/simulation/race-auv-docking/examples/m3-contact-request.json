@@ -170,6 +170,7 @@
       "flight": "upstream race_auv da58963 config_sim.yaml flight mode, unchanged",
       "docking.z/roll/pitch/yaw": "copied from the flight mode",
       "docking.x/y": "M2 selection p10 (p 10, i 0.2, d 0, v 5, +/-15)"
-    }
+    },
+    "protocol_version": "v1.5"
   }
 }
