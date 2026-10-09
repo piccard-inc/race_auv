@@ -4,6 +4,7 @@
 # scored result.
 #
 #   run_native_trial.sh --workspace WS --request REQUEST.json --output DIR [--ready-timeout-seconds N] [--video]
+#                       [--run-id R] [--organization O] [--project P]
 #
 #   1. native_request.py split: the request's gains, mission and context, numbers written as the platform writes
 #      them; the horizon and wall timeout.
@@ -20,9 +21,16 @@
 #      the hover-at-clearance criterion with native_request.py scoring's arguments (the mission's approach clearance,
 #      within 0.01 m), and docked by the request context's protocol_version (the M3 examples': v1.5, the first full
 #      hold). The report's trials also passed --meshes, which adds only the mesh-separation (coupling) fields.
+#   6. export_native_trial.py: DIR/SHA256SUMS over the trial directory, then its upload to the staging artifact bucket
+#      under native-runs/<organization>/<project>/<run-id>/ with a SHA-256 checked on write and read back
+#      (physical-ai#266). The profile is PICCARD_NATIVE_RUNS_AWS_PROFILE's; without it the upload is skipped. The run id
+#      is --run-id, else PICCARD_NATIVE_RUNS_RUN_ID, else DIR's name; the organization and project are the arguments,
+#      else PICCARD_NATIVE_RUNS_ORGANIZATION and PICCARD_NATIVE_RUNS_PROJECT. Its outcome never changes the exit status,
+#      and the last line printed is `UPLOAD <verified|failed|skipped(no profile)> <prefix>`.
 #
 # The runner starts its own Xvfb display unless PICCARD_EXTERNAL_DISPLAY=1 (then DISPLAY or PICCARD_DISPLAY is used).
-# ROS 2 Jazzy is sourced from ROS_SETUP (default /opt/ros/jazzy/setup.bash). The exit status is run_trial.sh's.
+# ROS 2 Jazzy is sourced from ROS_SETUP (default /opt/ros/jazzy/setup.bash). The exit status is run_trial.sh's, whatever
+# the export or the upload does.
 set -eo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,6 +40,9 @@ request=""
 output=""
 ready_timeout=110
 video=()
+run_id=""
+organization=""
+project=""
 while (($#)); do
   case "$1" in
     --workspace) workspace="$2"; shift 2 ;;
@@ -39,6 +50,9 @@ while (($#)); do
     --output) output="$2"; shift 2 ;;
     --ready-timeout-seconds) ready_timeout="$2"; shift 2 ;;
     --video) video=(--video); shift ;;
+    --run-id) run_id="$2"; shift 2 ;;
+    --organization) organization="$2"; shift 2 ;;
+    --project) project="$2"; shift 2 ;;
     *) echo "Unknown argument: $1" >&2; exit 64 ;;
   esac
 done
@@ -81,4 +95,20 @@ if [[ -f "$output/trial.json" ]]; then
   python3 "$metrics" "$output" --output-dir "$output/scored" "${scoring[@]}" \
     || echo 'race_m3_metrics failed; trial.json is kept' >&2
 fi
+
+# The export and upload run last and never change the exit status. export_native_trial.py prints the UPLOAD line
+# itself (exit 0 verified or skipped, 3 failed); if it ends any other way, the line is printed here.
+export_trial() {
+  local exported
+  python3 "$script_dir/export_native_trial.py" --trial-dir "$output" ${run_id:+--run-id "$run_id"} \
+    ${organization:+--organization "$organization"} ${project:+--project "$project"}
+  exported=$?
+  case "$exported" in
+    0|3) ;;
+    *) echo "UPLOAD failed - (export_native_trial.py exited $exported)" ;;
+  esac
+}
+set +e
+export_trial
+set -e
 exit "$status"

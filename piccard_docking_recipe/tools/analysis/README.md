@@ -340,3 +340,22 @@ On the M2 R-B contact trials, neither run closes at 2 cm:
 - N reaches a minimum gap of 0.067 m, p10 0.024 m.
 - At the minimum, the AUV dock point sits 21.9 mm shallow, with a couplink separation of 19.3 mm (N) and 19.4 mm
   (p10). That is contact-margin v1.1's recorded-pose result.
+
+# RACE tag visibility
+
+`race_tag_visibility.py` says which station tags each RACE camera can see from a pose, offline (#265, D2). It
+checks a pose mission's poses: `in_fov` lists the tags whose centres fall inside a camera's field of view widened by
+10 deg (any range, any facing), so a pose with none on either camera is out of view; `detectable` lists those inside
+the unwidened field of view, facing the camera and inside the range band where the trials' detector found them
+reliably. The geometry is the pinned simulation's (cameras from world_of_stonefish d51d59e `vehicles/race_auv.scn`
+and `/tf_static`; the station and its tags from ground truth); the module's docstring gives the sources and the
+check against recorded trials. Standard library only.
+
+```bash
+python3 tools/analysis/race_tag_visibility.py packages/simulation/race-auv-docking/examples/drift-and-revisit-request.json
+```
+
+It prints one JSON line per pose: the nominal Stonefish-world pose, `in_fov` and `detectable` per camera, the forward
+camera's ranges to tags 146, 541 and 558, and `out_of_view`. The poses are commanded set points mapped through
+`runtime/mission.py`'s nominal frame, so the EKF's drift moves the vehicle away from them; the field-of-view margin and
+the stand-off's distance from the range limits are what absorb it.
