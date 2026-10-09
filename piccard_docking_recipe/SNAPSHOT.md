@@ -1,6 +1,6 @@
 # Piccard race-auv-docking recipe: snapshot for the SOS Lab
 
-Exported from piccard-inc/piccard-physical-ai at commit c1530a4ab987f43777e9c28398c4738f6438f8a6 (committed 2026-10-08) by
+Exported from piccard-inc/piccard-physical-ai at commit 9bf639c0e588cc1421e914f36a9b656741d0416c (committed 2026-10-09) by
 `tools/release/export_race_auv_docking_snapshot.py`. It is the layer that ran the trials reported at
 piccard.science/experiments/race-auv-docking-approach-2026-09 and
 piccard.science/experiments/race-auv-docking-planner-2026-10. Nothing here runs against the lab's hardware. The
@@ -14,14 +14,22 @@ The paths are the repository's own, so the tools and tests run from this directo
   - The Dockerfile, the recipe, the request schema, the source lock and the conformance cases.
   - The example requests. `examples/m3-default-request.json` reads the tag sizes as the black-square edge
     (`black_square_edge`); `examples/m1-smoke-request.json` keeps the lab's configured sizes (`lab_configured`).
+    `examples/drift-and-revisit-request.json` (#265) takes the tags out of view for two legs of about five minutes
+    and back, reading them as the black-square edge.
   - `runtime/`: install, launch, the scenario wrapper, the collector, the mission validator, the docking metric,
-    the media recorders, the supervisors, the simulator seed and the native runner (`run_native_trial.sh`).
+    the media recorders, the supervisors, the simulator seed, the native runner (`run_native_trial.sh`)
+    and its export (`export_native_trial.py`).
   - `simulator-patches/`: `stonefish_seed_v1`, the optional Stonefish patch that makes the sensor-noise seed
     settable and printed.
   - `campaigns/`: the M2 missions and the tank floor.
+- `packages/localization/race-tag-graph/`: `race_tag_graph`, an offline GTSAM pose graph over the vehicle's own
+  sensor topics (EKF odometry, the 3D tag detections, `/tf_static`) with the tags as jointly estimated landmarks and
+  the dock point as output; batch and ISAM2 solvers over one factor builder; its `README.md` describes it. Its tests
+  run on synthetic telemetry.
 - `tools/campaigns/`: the mission and jobs-file builder, the tank-floor extractor, and their tests.
-- `tools/analysis/`: the M2 and M3 metrics, the contact-margin check, the recording-isolation check and the
-  onboard-load check, with their `README.md` and the metrics and onboard-load tests.
+- `tools/analysis/`: the M2 and M3 metrics, the contact-margin check, the recording-isolation check, the
+  onboard-load check and the tag-visibility check, with their `README.md` and the metrics, onboard-load and
+  tag-visibility tests.
 
 Below, a path that starts with neither `packages/` nor `tools/` is relative to `packages/simulation/race-auv-docking/`.
 
@@ -97,13 +105,18 @@ The controller sees only `/race_auv/odometry/filtered` and the AprilTag fuser.
 
 ## Running the checks
 
-The export ran these from this directory, with Python 3, PyYAML and jsonschema, and they passed:
+The export ran these from this directory, with Python 3, PyYAML and jsonschema (and, for the localization package,
+gtsam 4.3a0, NumPy and Matplotlib: its `requirements.txt`), and they passed:
 
     PYTHONPATH=packages/simulation/race-auv-docking/runtime python3 packages/simulation/race-auv-docking/test_conformance.py
     python3 tools/campaigns/test_build_phase_r_campaign.py
     python3 tools/analysis/test_race_m2_metrics.py
     python3 tools/analysis/test_race_m3_metrics.py
     python3 tools/analysis/test_race_onboard_load_check.py
+    python3 tools/analysis/test_race_tag_visibility.py
+    PYTHONPATH=packages/localization/race-tag-graph python3 packages/localization/race-tag-graph/tests/test_sensors.py
+    PYTHONPATH=packages/localization/race-tag-graph python3 packages/localization/race-tag-graph/tests/test_graph.py
+    PYTHONPATH=packages/localization/race-tag-graph python3 packages/localization/race-tag-graph/tests/test_outputs.py
 
 `tools/analysis/README.md` describes the tools' command lines. They recompute the metrics from a trial's served
 outputs.
