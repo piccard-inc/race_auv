@@ -138,7 +138,8 @@ class ScriptTests(unittest.TestCase):
         steps = ['native_request.py" split', 'source "$parts/limits.env"', 'prepare_candidate.py" install',
                  'prepare_candidate.py" verify', 'native_request.py" planner-params',
                  'export PICCARD_PLANNER_PARAMS=', 'native_request.py" scoring', 'read -r -a scoring',
-                 '"$script_dir/run_trial.sh"', 'status=$?', 'python3 "$metrics"', '"${scoring[@]}"', 'exit "$status"']
+                 '"$script_dir/run_trial.sh"', 'status=$?', 'python3 "$metrics"', '"${scoring[@]}"',
+                 'export_native_trial.py" --trial-dir "$output"', 'set +e\nexport_trial\nset -e', 'exit "$status"']
         positions = [self.NATIVE.index(step) for step in steps]
         self.assertEqual(positions, sorted(positions))
         self.assertIn('export PICCARD_NATIVE_WORKSPACE="$workspace"', self.NATIVE)

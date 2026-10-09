@@ -26,10 +26,12 @@ Tracking: piccard-inc/piccard-physical-ai#79 (milestone piccard-experiments #87)
 | `examples/m3-default-request.json` | The M1 smoke request with `apriltag_tag_size` `black_square_edge`, the tag-size convention for M3 requests (#107). |
 | `examples/m3-planner-request.json` | An M3 planner mission (#109) at the M2 selection p10: M1's dive as the fallback pose, then the planner, with the values proposed on piccard-experiments #88. |
 | `examples/m3-contact-request.json` | The M3 report's control arm at p10: Phase R-A's contact pose mission with black-square-edge tag sizes, the mission and gains the scored control-arm trials recorded. |
+| `examples/drift-and-revisit-request.json` | The drift-and-revisit pose mission for tag-aided localization (#265, D2) at p10, with black-square-edge tag sizes: a stand-off with the forward tags in view, then two legs of about five minutes with the station behind the vehicle, each followed by a return to the stand-off, then a hold. `tools/analysis/race_tag_visibility.py` checks its poses. |
 | `campaigns/phase-r-a-20260928/` | The M2 Phase R-A pose missions and their derivation (#96). The jobs files come from `tools/campaigns/build_phase_r_campaign.py`; the metrics from `tools/analysis/race_m2_metrics.py`. |
 | `campaigns/tank-floor-v1.json` | The tank's interior floor and the AUV's footprint, from the pinned world_of_stonefish (`tools/campaigns/extract_tank_floor.py`). The builder checks every pose for 0.3 m of floor clearance with it (#102). |
 | `runtime/run_campaign_trial.sh` | Container entrypoint: install → verify → `run_trial.sh`. |
-| `runtime/run_native_trial.sh`, `runtime/native_request.py` | The same trial without the image, on a colcon workspace built from `piccard-inc/race_auv` `piccard/docking-recipe`: request → install and verify → `run_trial.sh` → `race_m3_metrics`. See "Run natively". |
+| `runtime/run_native_trial.sh`, `runtime/native_request.py` | The same trial without the image, on a colcon workspace built from `piccard-inc/race_auv` `piccard/docking-recipe`: request → install and verify → `run_trial.sh` → `race_m3_metrics` → the export. See "Run natively". |
+| `runtime/export_native_trial.py` | A native trial's export: `SHA256SUMS` over the trial directory, then its upload to the operator's artifact bucket with each object's SHA-256 checked on write and read back (physical-ai#266). See "Export and upload". |
 | `runtime/prepare_candidate.py` | Validates and installs the gains, helm state and tag-size variant, or on a `piccard/docking-recipe` workspace checks the committed variants and writes only differing gains. Verifies them before launch. |
 | `runtime/mission.py` | Validator of both mission kinds: `piccard.race-auv.pose-mission/v1` and `piccard.race-auv.planner-mission/v1`. |
 | `runtime/planner_fused_dock.py` | The M3 planner node (#109): a staged approach on the tag-fused station dock point, publishing `direct_control` set points. It hears only the TF tree and the EKF odometry. |
@@ -613,11 +615,62 @@ The planner arm's request is `examples/m3-planner-request.json`, the control arm
    - at clearance, at the mission's approach clearance (a pose mission: 0.02 m) within 0.01 m
      (`native_request.py scoring`);
    - docked by the request context's `protocol_version`, which for the M3 examples is v1.5, the first full hold.
+5. **`runtime/export_native_trial.py`** writes the export's `SHA256SUMS` and uploads the trial directory (see
+   "Export and upload"). The last line the runner prints is `UPLOAD <verified|failed|skipped(no profile)> <prefix>`.
 
 The runner starts its own Xvfb display unless `PICCARD_EXTERNAL_DISPLAY=1`. ROS 2 Jazzy is sourced from
-`ROS_SETUP` (default `/opt/ros/jazzy/setup.bash`). The exit status is `run_trial.sh`'s. The simulator seed is
+`ROS_SETUP` (default `/opt/ros/jazzy/setup.bash`). The exit status is `run_trial.sh`'s, whatever the export or the
+upload does. The simulator seed is
 chosen and recorded as in the image (see "Simulator seed"). A native Stonefish built with `stonefish_seed_v1`
 uses the seed and prints it; an unpatched one ignores it.
+
+### Export and upload
+
+Since 2026-10-09 the operator's artifact bucket is the system of record for experiment evidence (piccard-api#306). `runtime/export_native_trial.py` puts a native trial there, as API-run trials already are
+(physical-ai#266). `run_native_trial.sh` runs it last; it also runs on its own on a copied-down trial directory:
+
+```bash
+PICCARD_NATIVE_RUNS_AWS_PROFILE=native-runs PICCARD_NATIVE_RUNS_BUCKET=<bucket> PICCARD_NATIVE_RUNS_REGION=<region> \
+  python3 packages/simulation/race-auv-docking/runtime/export_native_trial.py --trial-dir ~/trials/m3-1 \
+  --organization <organization> --project <project> [--run-id <run id>] [--existing-sha256sums]
+```
+
+1. **The manifest.**
+   - **Written** (the default, and the runner's): `SHA256SUMS` lists every regular file under the trial directory
+     as `sha256sum` writes them (`<hex>  ./<path>`, sorted by path), except `SHA256SUMS` and `upload.json` at its top.
+     Symbolic links are neither followed nor listed; `upload.json` names them. The trial's own files are only read.
+     A directory that already has a `SHA256SUMS` is refused, never rewritten.
+   - **Existing** (`--existing-sha256sums`, for a directory with its own manifest, such as a verification trial's):
+     the directory's `SHA256SUMS` is used as it is. Every file it lists must match it, or nothing is uploaded.
+2. **The upload,** only with `PICCARD_NATIVE_RUNS_AWS_PROFILE` set to a named profile (never a key). On the operator
+   host the profile is `native-runs`, set only once its role is applied (piccard-api#306); the script never defaults
+   it. The role grants `s3:PutObject` and `s3:GetObject` on the `native-runs/` prefix only: no `ListBucket`, no
+   delete, no read elsewhere. For these calls every other `AWS_` variable is dropped, static credentials included,
+   except the config's location.
+   - Each listed file, then `SHA256SUMS`, goes to the key `native-runs/<organization>/<project>/<run-id>/<path>`
+     in the bucket by one `aws s3api put-object` with its SHA-256 (`--checksum-algorithm SHA256
+     --checksum-sha256`), which S3 checks on write. A file over 5 GiB is refused, never sent in parts.
+   - Each object is then read back by `aws s3api head-object --checksum-mode ENABLED`: its size and its
+     `ChecksumSHA256` must be the file's. Without `ListBucket`, S3 answers a missing object with 403, not 404; either
+     is recorded as that file missing or forbidden.
+   - The bucket and its region have no defaults, so neither is named in this repository's public snapshot: they come
+     from `--bucket` or `PICCARD_NATIVE_RUNS_BUCKET` and `--region` or `PICCARD_NATIVE_RUNS_REGION`, which the
+     operator sets. Every call passes that `--region`, never the profile's own. With a profile but no valid bucket or
+     region the status is `failed` (bucket/region not configured) and the AWS CLI is not called.
+   - The organization and project come from the arguments, else `PICCARD_NATIVE_RUNS_ORGANIZATION` and
+     `PICCARD_NATIVE_RUNS_PROJECT`. The run id comes from `--run-id`, else `PICCARD_NATIVE_RUNS_RUN_ID`, else the trial
+     directory's name, and never takes a job's UUID. Each is one safe path segment.
+   - Calls are bounded: 600 s per put, 60 s per read-back, 1,800 s in all.
+3. **The record.** `upload.json` (outside `SHA256SUMS`) holds the status, the prefix, the counts and each file's put
+   and read-back:
+   - `verified`: every object was read back with the file's size and SHA-256;
+   - `failed`: any refusal, error or mismatch, with the reasons per file, or a profile without a configured bucket
+     or region;
+   - `skipped(no profile)`: no profile was set, and the AWS CLI was not called.
+
+   The script's last line is `UPLOAD <status> <bucket>/<prefix>`, with `-` in place of the prefix when it is not
+   known. It exits 0 for verified or skipped and 3 for failed. In the runner, neither the export nor the upload
+   changes the trial's exit status.
 
 ## Tests
 
