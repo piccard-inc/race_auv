@@ -1,0 +1,6 @@
+# race_tag_graph's runtime dependencies, at the versions physical-ai's CI lock pins (tools/ci/requirements.lock).
+# Reading a rosbag2 (--bag, untested) also needs the rosbags library.
+gtsam==4.3a0
+matplotlib==3.10.7
+numpy==2.3.1
+pyyaml==6.0.3

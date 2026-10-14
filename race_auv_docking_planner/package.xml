@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>race_auv_docking_planner</name>
+  <version>1.5.0</version>
+  <description>RACE AUV docking planner, protocol v1.5: a staged approach on the AprilTag-fused station dock point,
+    commanding bhv_direct_control set points. Inputs: the EKF odometry and four TF edges (the fuser's station dock
+    point, the EKF's world_ned to base_link, and two static vehicle frames). No ground truth.</description>
+  <maintainer email="bora@xbora.tv">Piccard Inc.</maintainer>
+  <!-- Copyright Piccard Inc. The licence is pending a founder decision. The node imports mvp_msgs (GPL-3.0) at run
+       time. -->
+  <license>Copyright Piccard Inc.; licence pending founder decision</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>tf2_ros_py</exec_depend>
+  <exec_depend>mvp_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>python3-yaml</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,35 @@
+# The RACE docking planner's protocol v1.5 parameters (piccard-experiments #88), the values of every scored planner
+# trial at the 0.1 m/s speed cap. Their hash, as the trial records state it, is
+# 12c05989447431826f1e082169eb572512e0b654301b564138f0c18d5ba5cc4d (parameters.parameters_sha256).
+# initial_setpoint is the pose the controller holds when the planner starts: the trials' fallback pose, M1's dive,
+# cg_link in race_auv/world_ned (z down). Every value is required; the node has no defaults.
+piccard_planner:
+  ros__parameters:
+    standoffs_m: [3.0, 1.5, 0.3, 0.0]
+    tick_hz: 5.0
+    band_m: 0.05
+    band_rad: 0.05
+    vertical_band_m: 0.01
+    approach_clearance_m: 0.02
+    settle_s: 10.0
+    speed_cap_mps: 0.1
+    final_stage_s: 420.0
+    final_deadband_m: 0.005
+    final_along_deadband_m: 0.02
+    final_along_interval_s: 60.0
+    final_arrival_m: 0.005
+    final_reapproach_s: 10.0
+    max_estimate_age_s: 1.0
+    max_frozen_estimate_s: 2.0
+    estimate_filter_s: 2.0
+    heading_window_s: 30.0
+    tag_pivot_m: [0.456667, 0.0, 0.22]
+    setpoint_deadband_m: 0.005
+    setpoint_deadband_rad: 0.02
+    initial_setpoint:
+      x_m: -0.325
+      y_m: 0.0
+      z_m: 3.78
+      roll_rad: 0.0
+      pitch_rad: 0.0
+      yaw_rad: 1.571

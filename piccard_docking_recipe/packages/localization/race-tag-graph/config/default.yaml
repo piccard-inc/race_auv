@@ -1,0 +1,76 @@
+# race_tag_graph: every noise model, gate and option of the formulation (piccard-inc/piccard-physical-ai#265).
+# The factor builder (race_tag_graph/factors.py) reads nothing else. The values are a-priori engineering choices,
+# not tuned on any evaluation trial.
+schema: piccard.race-tag-graph.config/v1
+
+frames:
+  odom: race_auv/odom              # the EKF's frame; the graph lives in it
+  base: race_auv/base_link
+  dock_output: race_station/dock_point
+
+keyframes:
+  max_interval_s: 1.0              # a keyframe at every image with detections, and at least this often
+  merge_s: 0.01                    # periodic keyframes closer than this to an image keyframe are dropped
+
+prior:                             # the first pose's prior fixes the gauge (the EKF's first pose)
+  rotation_sigma_rad: 0.001
+  translation_sigma_m: 0.001
+
+odometry:                          # EKF increments between keyframes, entered once, as motion
+  noise: model                     # model | ekf_covariance_difference (needs recorded covariance)
+  # model: random walks whose variances add (sigma^2 = rw_s^2 * dt + rw_m^2 * distance + floor^2 per keyframe), so
+  # the total over an interval does not depend on keyframe density; the floor is kept negligible for that reason.
+  translation_rw_m_per_sqrt_s: 0.002
+  translation_rw_m_per_sqrt_m: 0.01
+  rotation_rw_rad_per_sqrt_s: 0.0001
+  rotation_rw_rad_per_sqrt_rad: 0.005
+  translation_floor_m: 0.00001
+  rotation_floor_rad: 0.000001
+
+detections:                        # each tag a fixed landmark, initialised at its first sighting
+  tags: layout                     # "layout": the tags in the station layout; or a list of tag ids
+  max_range_m: 12.0
+  bearing_sigma_rad: 0.002         # across the camera ray, per metre of range
+  lateral_floor_m: 0.005
+  # Along the ray: a pose solved from a tag of size s seen at range r from f pixels across has a range error of
+  # about r^2 / (f s) per pixel of edge error, so sigma = range_sigma_m + range_px_sigma * r^2 / (focal_px * s).
+  range_sigma_m: 0.01
+  range_px_sigma: 0.5
+  focal_px: 954.0                  # the cameras' fx (race_auv_bringup/config/simulation/apriltag.yaml intrinsics)
+  # Where that sigma exceeds range_informative_sigma_m (about 3.0 m for the 0.12 m tags, 1.75 m for the 0.04 m tags)
+  # the detection constrains its bearing only: far ranges are biased, and averaging many of them keeps the bias.
+  range_informative_sigma_m: 0.05
+  bearing_only_range_sigma_m: 100.0
+  robust: {kernel: huber, k: 1.345}  # kernel: huber | cauchy | none
+  gate:                            # causal gate: a detection whose EKF-projected position lies further than
+    base_m: 0.5                    # base_m + per_m * range from the tag's running median is not added
+    per_m: 0.1
+
+orientation:                       # tag orientation factors: opt-in, range-gated (flips at distance)
+  enabled: false
+  max_range_m: 2.0
+  sigma_rad: 0.05
+  flip_gate_rad: 0.5
+
+isam2:
+  relinearize_threshold: 0.01
+  relinearize_skip: 1
+  final_updates: 3
+
+batch:
+  max_iterations: 100
+  relative_error_tol: 1.0e-8
+
+dock:
+  layout: station_layout.yaml      # relative to this file
+  frame_up: auto                   # auto | z_up | z_down: the dock frame's z against the odom frame's up
+  yaw_min_baseline_m: 0.2          # horizontal spread of the observed tags needed to fix the station's yaw
+  up_min_residual_ratio: 2.0       # auto: the rejected sign's fit residual must be this many times larger
+
+evaluation:
+  # The trial the range model was chosen on (README, "Disclosure"): a development trial, never in the headline set.
+  development_trials: [pr-m3a-p10-contact-r1]
+
+metrics:
+  visible_s: 1.0                   # a tag counts as in view within this time of a sighting
+  revisit_span_s: 5.0              # an out-of-view span at least this long makes the next sighting a re-sighting

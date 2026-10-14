@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- race-auv-docking/v1 trial scenario: the pinned world_of_stonefish race_auv_test.scn, unchanged, plus
+     contact monitors between the AUV and the station and between the AUV and the tank. The contact topics
+     are ground truth for scoring only; nothing in the vehicle stack subscribes to them. -->
+<scenario>
+    <include file="$(find world_of_stonefish)/world/race_auv_test.scn"/>
+
+    <contact name="auv_station">
+        <first_body name="race_auv/Vehicle"/>
+        <second_body name="race_station/Station"/>
+        <history points="1"/>
+        <ros_publisher topic="/piccard/contact/auv_station"/>
+    </contact>
+
+    <contact name="auv_tank">
+        <first_body name="race_auv/Vehicle"/>
+        <second_body name="tank"/>
+        <history points="1"/>
+        <ros_publisher topic="/piccard/contact/auv_tank"/>
+    </contact>
+</scenario>

@@ -1,0 +1,22 @@
+# The station's tag layout in its dock_point frame: operational geometry, not ground truth.
+# Source: race_station_description/urdf/base.urdf in GSO-soslab/race_station at commit
+# 100bc5a7ac253172b527c036d637da5482eaf0f3 (pinned in packages/simulation/race-auv-docking/source-lock-v1.json),
+# the URDF the lab's apriltag fuser loads (race_auv_bringup/config/simulation/apriltag.yaml, object block), where
+# each tag is a fixed-joint child of dock_point. The same values are pinned in
+# packages/simulation/race-auv-docking/runtime/test_tag_pivot.py. Only the tag36h11 tags the simulation detects are
+# listed (the tag25h9 tags are no longer detected; apriltag.yaml). rpy is URDF fixed-axis roll, pitch, yaw.
+# size_m is the detector's configured tag size under the black-square-edge convention, from
+# race_auv_bringup/config/simulation/apriltag_black_square_edge.yaml on piccard-inc/race_auv piccard/docking-recipe
+# (0.8 of the textured face that apriltag.yaml lists); the range noise model uses it (config detections block).
+schema: piccard.race-tag-graph.station-layout/v1
+frame: dock_point
+source:
+  repository: https://github.com/GSO-soslab/race_station
+  commit: 100bc5a7ac253172b527c036d637da5482eaf0f3
+  file: race_station_description/urdf/base.urdf
+tags:
+  "tag36h11:146": {size_m: 0.12, position_m: [0.430, 0.0, 0.405], rpy_rad: [-1.5707963, 0.0, -1.5707963]}
+  "tag36h11:176": {size_m: 0.12, position_m: [0.0, 0.25, -0.012], rpy_rad: [3.1415926, 0.0, -1.5707963]}
+  "tag36h11:185": {size_m: 0.12, position_m: [0.0, -0.25, -0.012], rpy_rad: [3.1415926, 0.0, -1.5707963]}
+  "tag36h11:541": {size_m: 0.04, position_m: [0.470, 0.0, 0.160], rpy_rad: [-1.5707963, 0.0, -1.5707963]}
+  "tag36h11:558": {size_m: 0.04, position_m: [0.470, 0.0, 0.095], rpy_rad: [-1.5707963, 0.0, -1.5707963]}

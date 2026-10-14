@@ -4,6 +4,7 @@ One Stonefish run of the mission in `request.json` (SHA-256 `a28e7f59e1e353fb7f7
 
 - `bev.png`: one bird's-eye panel, EKF odometry (solid) against ground truth (dashed), the mission waypoints named, the true tag and the tag reprojected from the EKF pose at every sighting; below it the EKF error over time with the interval in which the tag was not detected. Errors are horizontal ATE RMSE and max against ground truth, aligned once at the first sample. Frame: Stonefish world, x north, y east, z down. `bev-v1-superseded.png` is the first version (two panels, sighting dots, medians), kept because the thread discussed it.
 - `figure-numbers.json`: the numbers printed on the figure.
-- `make_figure.py`: the script that drew it from the run's `telemetry.jsonl` and `docking.json` (the `alignment` rows pair the controller's EKF-derived cg pose with ground truth at 2 Hz; detections are in the front camera's optical frame).
+- `make_figure.py`: the script that drew it. Version history: `bev-v1-superseded.png` (two panels, sighting dots, medians), `bev-v2-superseded.png` (one panel, RMSE, no sightings), `bev.png` (track coloured by section, sightings on the path, tag projected from the EKF pose and from the true pose, inset around the tag).
+- `SOURCE.md`: where the source that ran is on this branch.
 
 The recorded run (telemetry, trial, docking and launch records, 54 files) is held in Piccard's evidence store and is available on request.

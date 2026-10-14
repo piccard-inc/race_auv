@@ -1,0 +1,41 @@
+{
+  "apriltag_tag_size": "lab_configured",
+  "child_frame_id": "cg_link",
+  "frame_id": "world_ned",
+  "mission_id": "phase-r-a-m-approach-1step-v1",
+  "poses": [
+    {
+      "dwell_s": 40,
+      "label": "dive",
+      "pitch_rad": 0.0,
+      "roll_rad": 0.0,
+      "x_m": -0.325,
+      "y_m": 0.0,
+      "yaw_rad": 1.571,
+      "z_m": 3.78
+    },
+    {
+      "dwell_s": 200,
+      "label": "approach",
+      "pitch_rad": 0.0,
+      "roll_rad": 0.0,
+      "x_m": -0.326,
+      "y_m": 5.495,
+      "yaw_rad": 1.571,
+      "z_m": 3.78
+    },
+    {
+      "dwell_s": 60,
+      "label": "hold_1p5m",
+      "pitch_rad": 0.0,
+      "roll_rad": 0.0,
+      "x_m": -0.326,
+      "y_m": 5.495,
+      "yaw_rad": 1.571,
+      "z_m": 3.78
+    }
+  ],
+  "question": "Phase R-A reference (the M1 mission): one step from the 7 m dive to the 1.5 m stand-off, dwell 200 s, hold 60 s; how far does the dock point overshoot and how long does it take to settle?",
+  "schema": "piccard.race-auv.pose-mission/v1",
+  "seed": null
+}

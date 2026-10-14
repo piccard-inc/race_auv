@@ -1,0 +1,11 @@
+# Libraries built and installed to /usr/local before the workspace (DEPENDENCIES.md has the exact commands).
+#   mkdir -p libs && vcs import libs < piccard_docking_recipe/dependencies/libraries.repos
+repositories:
+  stonefish:
+    type: git
+    url: https://github.com/GSO-soslab/stonefish.git
+    version: 7d52673791834caa743907dde83a1949134ef2f0
+  apriltag:
+    type: git
+    url: https://github.com/AprilRobotics/apriltag.git
+    version: dc6316dc37520e56819d64741b54a41b50c92866

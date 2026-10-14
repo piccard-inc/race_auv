@@ -1,0 +1,344 @@
+{
+  "schema": "piccard.experiment-recipe-descriptor/v1",
+  "recipe_id": "race-auv-docking/v1",
+  "controller_variant": "upstream",
+  "status": "source_complete_native_unqualified",
+  "request_schema": "piccard.race-auv.docking-request/v1",
+  "gains_schema": "piccard.race-auv.gains/v1",
+  "mission_schemas": [
+    "piccard.race-auv.pose-mission/v1",
+    "piccard.race-auv.planner-mission/v1"
+  ],
+  "artifact_schemas": {
+    "trial.json": "piccard.race-auv.trial/v1",
+    "docking.json": "piccard.race-auv.docking/v1",
+    "runner.json": "piccard.race-auv.runner/v1",
+    "candidate.json": "piccard.race-auv.candidate/v1",
+    "candidate-install-verification.json": "piccard.race-auv.candidate-install-verification/v1",
+    "telemetry.jsonl": "one JSON object per line: {kind, t, monotonic_ns, wall_time_ns, topic, sim, ...}"
+  },
+  "source_lock_sha256": "ee40254652452b8f8cf29ef039e44cf1bf4436429f52b432e7b88165015df3ae",
+  "images": {
+    "base": {
+      "reference": "piccard/alpha-rise-gains-only-staging@sha256:f11a47bbe889d10338652488192977edc771112f648421e293bb991cf99aae2c",
+      "note": "the pre-campaign RISE base, not the campaign image; ARG BASE_IMAGE defaults to it"
+    },
+    "recipe": {
+      "reference": null,
+      "architecture": "linux/amd64",
+      "status": "pending: built from this commit, pushed to ECR and registered by the CTO"
+    }
+  },
+  "overlay_sources": [
+    {
+      "name": "race_auv",
+      "repository": "https://github.com/piccard-inc/race_auv",
+      "commit": "da58963c048228856dfdd5917da21a14edfa1985",
+      "archive_sha256": "59e80dfd1238314ec31e0b9979b6209883ed0b6590e3c5f541aba31cc31316fe",
+      "workspace_path": "src/race_auv"
+    },
+    {
+      "name": "race_auv_sim",
+      "repository": "https://github.com/GSO-soslab/race_auv_sim",
+      "commit": "3601a30f49c7b8ddac2845c41c99af8af92c0e65",
+      "archive_sha256": "7d8091d3776198ef0d5b5b07cb0345e4713ee6950adbb37a8724bc7f21eaa177",
+      "workspace_path": "src/race_auv/race_auv_sim"
+    },
+    {
+      "name": "race_auv_perception",
+      "repository": "https://github.com/GSO-soslab/race_auv_perception",
+      "commit": "5944d5a6ebd44601bcc5579e91b82d5d1b3735cb",
+      "archive_sha256": "cfb07acd3ff3c288c46f15362993e6955d1f86e11cc0f26896371f91e701cbd4",
+      "workspace_path": "src/race_auv/race_auv_perception"
+    },
+    {
+      "name": "race_station",
+      "repository": "https://github.com/GSO-soslab/race_station",
+      "commit": "100bc5a7ac253172b527c036d637da5482eaf0f3",
+      "archive_sha256": "a29539a491725de026a70ba85e4c0aca0fe22c03938f62d6039c98bbfbe00ee2",
+      "workspace_path": "src/race_station"
+    },
+    {
+      "name": "world_of_stonefish",
+      "repository": "https://github.com/GSO-soslab/world_of_stonefish",
+      "commit": "d51d59e77211a436a0c3617c30a80c36337cdbbc",
+      "archive_sha256": "d7c10d04a39ab7bcc1aa6a58d2a6e59a27319dfe9957f589271f9e9cdbf055d2",
+      "workspace_path": "src/world_of_stonefish"
+    },
+    {
+      "name": "apriltag",
+      "repository": "https://github.com/AprilRobotics/apriltag",
+      "commit": "dc6316dc37520e56819d64741b54a41b50c92866",
+      "archive_sha256": "34ac49fb753e85bd611c1cf9852622e8b4577c6ebdc7c167efe1bc353fe13b8b",
+      "workspace_path": "/opt/source/apriltag (installed to /usr/local)"
+    }
+  ],
+  "fixed_source": {
+    "race_auv": "da58963c048228856dfdd5917da21a14edfa1985",
+    "race_auv_sim": "3601a30f49c7b8ddac2845c41c99af8af92c0e65",
+    "race_auv_perception": "5944d5a6ebd44601bcc5579e91b82d5d1b3735cb",
+    "race_station": "100bc5a7ac253172b527c036d637da5482eaf0f3",
+    "world_of_stonefish": "d51d59e77211a436a0c3617c30a80c36337cdbbc",
+    "apriltag": "dc6316dc37520e56819d64741b54a41b50c92866",
+    "stonefish": "7d52673791834caa743907dde83a1949134ef2f0",
+    "stonefish_ros2": "a7c9be9c50c4e851d045d278ef3e641641673b70",
+    "mvp_msgs": "7aa616fab3bdd26dcd4ad178c4bfcd48c4231480",
+    "mvp_control": "6cfea2d5c1e371bd371aa6587066d27c617c55ad",
+    "mvp_mission": "84cce537aa08267eb65bcf2b9ea65a27d81bd6f0",
+    "mvp_utilities": "0c475d3ffe9ea8407caf640e70f9f7d8b86c3331"
+  },
+  "fixed_execution": {
+    "entrypoint": "/opt/piccard-race-auv/runtime/run_campaign_trial.sh",
+    "runner_flags": [
+      "--output",
+      "--horizon-seconds",
+      "--wall-timeout-seconds",
+      "--ready-timeout-seconds",
+      "--expected-gains-json",
+      "--context-json",
+      "--mission-profile-json"
+    ],
+    "inputs": [
+      "/input/gains.json",
+      "/input/mission.json",
+      "/input/context.json"
+    ],
+    "readiness_timeout_seconds": 110,
+    "process_isolation": "fresh simulator, vehicle stack and station processes per trial in a disposable container",
+    "simulator": {
+      "mode": "graphical",
+      "rate_hz": 100,
+      "window": [
+        1200,
+        800
+      ],
+      "rendering_quality": "high",
+      "scenario": "runtime/scenario/race_auv_docking_trial.scn: upstream world/race_auv_test.scn unchanged, plus contact monitors race_auv/Vehicle-race_station/Station and race_auv/Vehicle-tank"
+    },
+    "display": {
+      "production": "host Xorg :99 on the NVIDIA GPU (PICCARD_EXTERNAL_DISPLAY=1)",
+      "development": "Xvfb with Mesa llvmpipe"
+    },
+    "controller": {
+      "node": "/race_auv/mvp_control_ros_node",
+      "frequency_hz": 10,
+      "odometry_source": "/race_auv/odometry/filtered",
+      "world_link": "race_auv/world_ned",
+      "child_link": "race_auv/cg_link"
+    },
+    "configured_output_limits": {
+      "u": [
+        -50,
+        50
+      ],
+      "v": [
+        -15,
+        15
+      ],
+      "z": [
+        -30,
+        30
+      ],
+      "roll": [
+        -10,
+        10
+      ],
+      "pitch": [
+        -20,
+        20
+      ],
+      "yaw": [
+        -15,
+        15
+      ]
+    },
+    "docking_mode": "control_modes.docking = x, y, z, roll, pitch, yaw of cg_link in world_ned; z/roll/pitch/yaw output limits equal the configured flight limits; x/y limits come from the request",
+    "helm": {
+      "state": "direct_control",
+      "control_mode": "docking",
+      "transitions": [
+        "start",
+        "kill"
+      ],
+      "behavior": {
+        "name": "bhv_direct_control",
+        "plugin": "helm/DirectControl",
+        "priority": 1
+      },
+      "installed_in": "the trial container's copies of helm_sim.yaml and bhv_params_sim.yaml, not upstream"
+    },
+    "setpoints": "the collector publishes mvp_msgs/ControlProcess on /race_auv/mvp_helm/bhv_direct_control/desired_setpoints at 1 Hz; each pose is held for dwell_s",
+    "planner": {
+      "applies_to": "piccard.race-auv.planner-mission/v1 (M3, piccard-physical-ai#109)",
+      "node": "/piccard_planner (runtime/planner_fused_dock.py, its own process group)",
+      "inputs": [
+        "/tf and /tf_static, looked up only for race_auv/world_ned->race_auv/base_link (EKF), race_auv/base_link->race_station/dock_point (AprilTag fuser), race_auv/base_link->race_auv/auv_dock_point and race_auv/base_link->race_auv/cg_link (static)",
+        "/race_auv/odometry/filtered (age gate)"
+      ],
+      "output": "mvp_msgs/ControlProcess on /race_auv/mvp_helm/bhv_direct_control/desired_setpoints, cg_link in race_auv/world_ned; JSON state per tick on /piccard/planner/state",
+      "estimate": "a level station at a heading, and its dock point, in race_auv/world_ned. The fuser's three forward-camera tags lie on the station's vertical centreline, so its yaw is unconstrained with all three (M3-0: sd 35-44 deg at 1.5 m). Heading: the circular median of the fused heading over heading_window_s, the window filling from the fallback pose's dwell (the planner observes while it waits), then held from the second stage on. At the final stage's first fresh tick (protocol v1.2) it is replaced once by the circular median of the fresh fused headings of the stage before it within heading_window_s (at 0.3 m tags 541 and 558 both solve); with fewer than 5 fresh samples the held heading is kept; held from then on either way, and the yaw set point steps to it once at that stage start. State records carry heading_rehold (t, samples, applied, previous, heading); trial.json's planner block keeps it with received_t. Dock point: the fused pose's image of tag_pivot_m minus the pivot rotated by the level station at the heading, low-passed with estimate_filter_s. A tick is stale and missing data when an input is missing or older than max_estimate_age_s (age), or when the fused TF's stamp advances but its transform stays bit-identical for longer than max_frozen_estimate_s (frozen): the set point holds, and the tick neither ends a stage nor restarts the settle or at-set-point clock",
+      "tag_pivot": "tag_pivot_m is station construction: the centroid, in the station dock frame, of the tags race_auv_bringup config/simulation/apriltag.yaml configures for cam_front, positioned by the station URDF it names (runtime/tag_pivot.py; 0.456667, 0, 0.22 m at the source lock). The collector derives it at trial start and fails closed (tag_pivot_mismatch, tag_pivot_underivable) if the mission's value differs by more than 1 mm",
+      "stages": "the stage target places the AUV dock point stand-off s behind the station estimate and approach_clearance_m above it, in every stage (protocol v1.3: the legs clear the station frame's rails; the vertical error is around it). each stand-off s but the last ends once the fused error has been within the band for settle_s: band_m along, vertical_band_m vertical (protocol v1.2; band_m in the final stage), band_rad in heading, band_m + s * band_rad lateral (the lateral target error is s times the station heading's estimate error); the last lasts final_stage_s, then the planner reports complete and holds",
+      "set_points": "discrete steps, because mvp_control 6cfea2d zeroes an axis's integral whenever its set point changes: x, y and yaw at a stage start, each only past its deadband (setpoint_deadband_m, _rad); then, after settle_s with cg_link within band_m of the set point on x and y and within vertical_band_m on z (protocol v1.3) and a fresh fused error still outside the band, every axis it is outside on, each only past its deadband (v1.3; each deadband at most its band, checked at validation). In the final stage (protocol v1.2) x and y follow the live goal, with no settle wait; yaw keeps the stage start's and depth is kept. From protocol v1.4 each world axis re-targets on its own, past final_deadband_m (the lateral one throughout), because mvp_control zeroes an axis's integral on any change of its set point. From protocol v1.5 the along axis (the world axis closer to the approach) approaches from the stage start, re-targeted only when its goal is past final_along_deadband_m from the held value and final_along_interval_s has passed since its last change (the stage start counts as one); when the fused along error comes within final_arrival_m of the goal on the approach's side it is re-issued at the goal once, zeroing the approach's integral windup, and then follows the goal past final_deadband_m; a fused along error past final_along_deadband_m for final_reapproach_s starts a new approach (v1.4: the along axis re-targeted on the fused along error past final_along_deadband_m and the interval). The command walks to every stage's held goal and every final-stage re-target (protocol v1.1): the x/y set point moves from the last command at most speed_cap_mps and lands exactly, yaw is the goal's from the stage start, depth is kept, and the refinement steps are not walked and wait until the walk has landed",
+      "handover": "the collector flies fallback_pose like a pose, calls /piccard_planner/start (std_srvs/Trigger), keeps the fallback set point until the planner's first command, then stops publishing",
+      "audit": "consumption audit planner_inputs: subscriptions within /tf, /tf_static and the EKF odometry, TF lookups within the four edges above; otherwise planner_reads_other_inputs fails the trial",
+      "record": "trial.json planner: node, parameters, parameters_sha256 (JSON, sorted keys, no spaces), stages, complete, stale_intervals (from_t, to_t, reason age or frozen), tag_pivot (mission, derived, max_difference_m, ok), setpoint_steps, heading_rehold, approach_clearance_m (v1.3; each state record's goal carries it too); telemetry kind planner per tick"
+    },
+    "ground_truth": {
+      "scope": "scoring only",
+      "sources": [
+        "/race_auv/stonefish/odometry (10 Hz, link Base = nose_tip_link)",
+        "/race_station/stonefish/odometry (10 Hz, link Base = race_station/base_link)",
+        "/piccard/contact/auv_station",
+        "/piccard/contact/auv_tank",
+        "/piccard/ground_truth/{tf,tf_static,upstream_docking_pose}"
+      ],
+      "tf_isolation": "race_station bringup and upstream's ground_truth_docking node run with /tf and /tf_static remapped to /piccard/ground_truth/*",
+      "audit": "trial.json consumption_audit_before_mission and consumption_audit_at_end list every node's subscriptions and the /tf publishers and edges; either failing fails the trial. Problems: the helm or controller consume odometry other than /race_auv/odometry/filtered; a vehicle node subscribes to ground truth; ground-truth TF on the vehicle tree (ground_truth_tf_on_vehicle_tree: a ground-truth publisher, a station edge besides the fuser's dock point, or a frame with two parents); a frame that is neither a vehicle/station frame nor the fuser's per-observation race_auv/base_link -> apriltag_<family>_<id> frame (unknown_tf_frame_on_vehicle_tree); an alpha_rise node. /stonefish_simulator holds a /tf broadcaster but sends nothing unless a scenario enables ros_base_link_transform."
+    },
+    "docking_metric": "distance and relative pose between race_auv auv_dock_point (Base + (-0.305, 0, -0.13)) and race_station dock_point (Base + (-0.410, 0.325, -0.04), roll pi), from the two ground-truth odometries at 10 Hz; checked against the published URDF TF chain and upstream's ground-truth node every trial (docking.json frame_validation)",
+    "timing_basis": "collector monotonic receive time; ROS /clock recorded when present"
+  },
+  "development_bounds": {
+    "authority": "Well-formedness guard only: finite, non-negative, below an absurdity ceiling. Experiment protocols declare their own search bounds; not lab-approved physical ranges",
+    "p": {
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "i": {
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "d": {
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "v": {
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "docking_xy_output_limits": {
+      "pid_min": {
+        "minimum": -10000,
+        "exclusive_maximum": 0
+      },
+      "pid_max": {
+        "exclusive_minimum": 0,
+        "maximum": 10000
+      }
+    }
+  },
+  "allowed_variation": "P/I/D/V of every flight and docking axis; docking x/y output limits; the pose mission, or the planner mission's fallback pose and planner parameters; the declared AprilTag tag-size variant",
+  "variants": {
+    "apriltag_tag_size": {
+      "lab_configured": "default for pose missions; the lab detector config (tag36h11 0.15 m and 0.05 m)",
+      "black_square_edge": "default for planner missions; installs a corrected CPU-detector config (0.12 m and 0.04 m) in the trial output; recorded in candidate.json and trial.json; upstream files unchanged"
+    }
+  },
+  "notes": {
+    "tag_size_bias": "M1 reproduces the lab configuration and so carries a 1.25x range bias in simulation. Evidence: world_of_stonefish d51d59e data/apriltags/tag36_11_*_1000px.png have their black square at pixels 100..899 of 1000 (0.8 of the texture); race_station.scn draws them on 0.15 m and 0.05 m box faces with uv_mode=\"1\" (whole texture stretched over each face), so the black edge is 0.12 m and 0.04 m. AprilRobotics estimate_tag_pose takes the black-edge length as tag_size, so the configured 0.15/0.05 put tags 1.25x too far. Measured in the arm64 dev loop with the lab configuration: fused dock-point range / ground truth = 1.249 at 7.3 m and 1.244 at 2.1 m.",
+    "build_dependencies": "race_auv_bringup declares rviz2 as a dependency; the RISE base already ships ros-jazzy-rviz2, so rosdep resolves it there and installs nothing for it; no trial launches rviz. robot_state_publisher and world_of_stonefish are runtime dependencies of this recipe's launch.",
+    "build_changes": "the empty top-level race_station package and race_auv_apriltag_cuda are COLCON_IGNOREd in this build only; real-vehicle configuration (config.yaml, helm.yaml and the other hardware files listed in runtime/sanitize_seed.py) is removed from the image",
+    "base_workspace": "the RACE entrypoint sources the RISE base's /opt/ros2_ws underlay because Stonefish, stonefish_ros2 and the MVP stack live there (the /opt/race_ws overlay chains it anyway); that underlay also holds the base's alpha_rise_* packages, so they are on the package path, but no RACE file names, launches or sources anything alpha_rise (runtime/test_race_runtime.py greps the entrypoint files) and the trial audit fails if an alpha_rise node appears in the ROS graph",
+    "controller_frame": "the EKF fuses IMU roll/pitch and rates, DVL and depth but not absolute yaw, so race_auv/odom is base_link's start pose and drifts; description.launch.py puts race_auv/world_ned at rpy (3.1415, 0, 1.571) from it. With the scenario start (heading north, base_link at Stonefish world x -3.8) the controller's world_ned is the Stonefish world rotated +90 deg about z: x_C = -y_W, y_C = x_W + 3.8, z_C = depth, yaw_C = yaw_W + 1.571 (measured in the arm64 dev loop). Pose bounds are the tank interior mapped into that frame: the inner box of the double-shell tank mesh (x_W +/-4.57, y_W +/-3.05) with the vehicle's lowest point above its floor (z_W about 4.49), rounded inward (#104, campaigns/tank-floor-v1.json); docking.json records the measured alignment and the drift at each dwell end",
+    "per_trial_cost": "graphical Stonefish at upstream quality with two 10 Hz cameras and two CPU AprilTag detectors per trial; measured in the M1 e2e trial",
+    "station_odometry": "10 Hz, as upstream",
+    "contact_fallback": "the wrapper's include and both contact monitors resolved in the dev loop (parser log 'Parsing finished normally'); a dev-only run driving the AUV into the station produced AUV-station contact messages at roughly the simulator rate while touching (max normal force 199 N). docking.json minimum_distance (ground-truth dock-point distance) remains the documented proxy if the monitors ever fail to resolve",
+    "apriltag_binding": "race_auv_camera_pkg's CPU backend calls apriltag.estimate_tag_pose(), which AprilRobotics added to the Python binding after v3.4.5 (commit dc6316d, pinned here). With v3.4.5 the call raises, the detector silently publishes identity camera-to-tag poses and the fused dock point lands near the camera (seen in the arm64 dev loop: fused range 0.585x truth). The image build now solves a pose on the pinned tag texture and fails if it cannot."
+  },
+  "resource_expectations": {
+    "architecture": "linux/amd64",
+    "gpu": "NVIDIA OpenGL-capable GPU for graphical Stonefish",
+    "ros_distribution": "jazzy",
+    "provider": "owned by API; not selected by this recipe"
+  },
+  "qualification": {
+    "source_and_offline_contract": "implemented",
+    "native_runtime_release": "not_qualified",
+    "physical_validation": "not_evaluated"
+  },
+  "dev_loop_evidence": {
+    "platform": "linux/arm64, Xvfb + Mesa llvmpipe, base rebuilt from the RISE Dockerfile at de26d7c1",
+    "m1_smoke": {
+      "status": "completed",
+      "helm_reached_direct_control": true,
+      "gains_verified": true,
+      "consumption_audit_problems": [],
+      "frame_validation": "validated",
+      "hold_1p5m": {
+        "commanded": "cg_link (-0.326, 5.495, 3.78) yaw 1.571 in controller world_ned",
+        "ground_truth_dock_distance_m": {
+          "min": 1.685,
+          "max": 1.707
+        },
+        "controller_frame_drift_at_end_m": 0.172,
+        "note": "steady for the full 60 s; the 0.2 m excess over 1.5 m is the EKF dead-reckoning drift the trial records"
+      },
+      "tags": [
+        "tag36h11:146",
+        "tag36h11:541",
+        "tag36h11:558"
+      ],
+      "fused_dock_point_tf_samples": 127,
+      "process_cleanup_verified": true
+    },
+    "m3_planner": {
+      "status": "development evidence only: no claim, nothing scored; the M3-0 claim is the staging run's",
+      "request": "examples/m3-planner-request.json (the values proposed on piccard-experiments#88), p10 gains, M1's dive as the fallback pose, horizon 900 s",
+      "estimate_rate": "cam_front renders at about 0.75 Hz and the fuser publishes at 1.3-2.8 Hz under host load 5-19 (the L40S: about 7 Hz); the fuser repeats its pose between camera frames",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "the full fused orientation placed the targets: the fused pitch (sd 5-20 deg at 4-8 m) swung the 3 m depth target by 1.6 m",
+          "change": "a level approach axis from the heading only, low-passed (estimate_filter_s)"
+        },
+        {
+          "attempt": 2,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "with the fuser at 1.3 Hz, stale ticks restarted the settle clock",
+          "change": "a stale tick is missing data: it holds the set point and touches no clock"
+        },
+        {
+          "attempt": 3,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "every axis changed on every tick; mvp_control zeroes an axis's integral at each change, so the depth integral stayed near 0 and the AUV 0.85-0.95 m shallow",
+          "change": "set-point deadbands"
+        },
+        {
+          "attempt": 4,
+          "status": "stopped by hand in stage 0 once the cause was clear",
+          "finding": "the goal's noise at 3 m (sd 2-5 cm) beat the 2 cm deadband: 101 depth steps (x 201, y 73) in the 132 s from the handover to 180 s, the AUV about 0.9 m shallow",
+          "change": "discrete set-point steps: x, y, yaw at a stage start, then one refinement on arrival"
+        },
+        {
+          "attempt": 5,
+          "status": "budget_censored",
+          "finding": "the depth integral held (14-21 on the 7 to 3 m approach); its one depth step, +2.6 cm at 111.6 s, zeroed it: 0.51 m shallow at +23 s, back within 5 cm after 54 s. Stage 0 then sat at 0.197 m along with no further step possible. From about 260 s a simulator fault froze the camera image (bit-identical detections under fresh stamps, passing the age gate) and ran the EKF away (a phantom 5.3 m/s for 70 s)",
+          "change": "steps after settle_s at the set point on the out-of-band axes only; max_frozen_estimate_s"
+        },
+        {
+          "attempt": 6,
+          "status": "budget_censored",
+          "finding": "handover at 48.0 s; the x/y integrals wound up to about 3.5 on the approach and carried the AUV 0.23 m past its set point for about 120 s; then 9 refinements between 277 and 513 s (x, y, yaw only: no depth step, the depth integral 13.72-14.00 throughout). Stage 0 did not settle: under a flat 5 cm band the lateral error (sd 7-19 cm) was never inside for 10 s. Its cause is the fused heading at 3 m: filtered sd 1.1-3.2 deg per 20 s, and fused minus true heading sd 0.070 rad (p90 0.121), half of the line-of-sight bearing leaking in (slope -0.53, r -0.64); fused minus true lateral sd 0.24 m. At about 645 s the attempt-5 fault recurred; the frozen guard marked 873 ticks stale from 662.8 s and the planner held its set point",
+          "change": "the lateral band widens with the stand-off (band_m + s * band_rad); this change came after attempt 6"
+        }
+      ],
+      "audit": "consumption_audit problems [] before the mission and at the end in every attempt; planner_inputs: subscriptions /race_auv/odometry/filtered, /tf and /tf_static, and exactly the four TF lookups; the reported parameter hash matched",
+      "not_reached": "no attempt left stage 0 (3 m): the 1.5 m and 0.3 m stages, the final ramp, closure and contact are untested in the dev loop"
+    },
+    "note": "development evidence only; the production e2e trial runs on linux/amd64 with the NVIDIA Xorg display"
+  },
+  "media_capabilities": [
+    "display_video",
+    "onboard_camera_video"
+  ],
+  "media": {
+    "display_video": "--video: ffmpeg x11grab of the Stonefish window (1200x800, 10 fps, libx264 ultrafast CRF 25, bitrate capped so the clip stays within 60 MB), cursor hidden; runtime/follow_view.sh points the window's trackball at race_auv (GUI view only) because Stonefish 1.5 has no scenario element for the GUI view; once the view is confirmed, one [H] press hides the GUI panels and the status bar (presentation view, confirmed from pixels, retried at most once; media.json source.view.gui, no burned-in clock)",
+    "provenance": "media.json (piccard.race-auv.media/v1): per clip path, bytes, sha256, ffprobe summary, poster PNG at a stated seek time, GL renderer and software-renderer flag, sampled-frame black and vehicle-centred checks, and the measured video-to-collector clock offset; role illustrative_media_only, publication_authorized false",
+    "budget_bytes": 100000000,
+    "outcome_isolation": "the collector and launch invocations are independent of both flags (runtime/test_race_runtime.py MediaTests); --video adds no ROS node; --onboard-camera-video adds one node that the consumption audits list under media_nodes (allowed only the cam_front image, never ground truth) instead of subscriptions, so a recording run's trial.json differs from a non-recording run's in that key only",
+    "compute_isolation": "not established: x11grab and libx264 share the host's CPUs with the simulator. Scored trials do not record until three paired no-video/with-video runs on the L40S show no effect on settling times or the collector's timing (setpoint period jitter, telemetry gaps); the first two RISE media reruns settled slower than their scored trials on most steps",
+    "onboard_camera_video": "--onboard-camera-video: runtime/onboard_recorder.py, one ROS node (/piccard_media_recorder) with one reliable keep-last-2 subscription to /race_auv/cam_front/stonefish/data/image_color (1600x1200, declared 10 Hz); frames halved to 800x600, placed on a 10 fps timeline by receive time and held until the next (libx264 ultrafast CRF 25, bitrate capped so the clip stays within 40 MB), so the clip plays in real time at whatever rate the camera renders; cam_front-frames.csv places each camera frame on the timeline"
+  }
+}

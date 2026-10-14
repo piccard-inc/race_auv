@@ -1,0 +1,104 @@
+diff --git a/Library/src/comms/USBL.cpp b/Library/src/comms/USBL.cpp
+index 5739d7e..2e261a7 100644
+--- a/Library/src/comms/USBL.cpp
++++ b/Library/src/comms/USBL.cpp
+@@ -24,12 +24,46 @@
+ //
+ 
+ #include "comms/USBL.h"
++#include <cerrno>
++#include <cstdio>
++#include <cstdlib>
+ 
+ namespace sf
+ {
+     
++// stonefish_seed_v1 (Piccard): the noise generator's seed is STONEFISH_SEED plus the generator's stream when that is
++// set (a decimal integer in [0, 4294967295]), else a draw from std::random_device as upstream. The seed used is
++// printed to stderr once, at library load.
++static std::mt19937::result_type stonefishSeed(const char* generator, unsigned int stream, std::random_device& device)
++{
++    const char* text = std::getenv("STONEFISH_SEED");
++    unsigned long long seed;
++    const char* source;
++    if(text != nullptr && *text != '\0')
++    {
++        char* end = nullptr;
++        errno = 0;
++        unsigned long long value = std::strtoull(text, &end, 10);
++        if(text[0] < '0' || text[0] > '9' || errno != 0 || *end != '\0' || value > 0xFFFFFFFFull)
++        {
++            std::fprintf(stderr, "stonefish_seed_v1: STONEFISH_SEED must be a decimal integer in [0, 4294967295], got '%s'\n", text);
++            std::abort();
++        }
++        seed = (value + stream) & 0xFFFFFFFFull;
++        source = "STONEFISH_SEED";
++    }
++    else
++    {
++        seed = device();
++        source = "random_device";
++    }
++    std::fprintf(stderr, "stonefish_seed_v1: %s noise seed %llu from %s\n", generator, seed, source);
++    std::fflush(stderr);
++    return static_cast<std::mt19937::result_type>(seed);
++}
++
+ std::random_device USBL::randomDevice;
+-std::mt19937 USBL::randomGenerator(randomDevice());
++std::mt19937 USBL::randomGenerator(stonefishSeed("USBL", 1, randomDevice));
+     
+ USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+            : AcousticModem(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
+diff --git a/Library/src/sensors/Sensor.cpp b/Library/src/sensors/Sensor.cpp
+index 232a760..65ffbbf 100644
+--- a/Library/src/sensors/Sensor.cpp
++++ b/Library/src/sensors/Sensor.cpp
+@@ -30,12 +30,46 @@
+ #include "core/Console.h"
+ #include "graphics/OpenGLPipeline.h"
+ #include "graphics/OpenGLContent.h"
++#include <cerrno>
++#include <cstdio>
++#include <cstdlib>
+ 
+ namespace sf
+ {
+ 
++// stonefish_seed_v1 (Piccard): the noise generator's seed is STONEFISH_SEED plus the generator's stream when that is
++// set (a decimal integer in [0, 4294967295]), else a draw from std::random_device as upstream. The seed used is
++// printed to stderr once, at library load.
++static std::mt19937::result_type stonefishSeed(const char* generator, unsigned int stream, std::random_device& device)
++{
++    const char* text = std::getenv("STONEFISH_SEED");
++    unsigned long long seed;
++    const char* source;
++    if(text != nullptr && *text != '\0')
++    {
++        char* end = nullptr;
++        errno = 0;
++        unsigned long long value = std::strtoull(text, &end, 10);
++        if(text[0] < '0' || text[0] > '9' || errno != 0 || *end != '\0' || value > 0xFFFFFFFFull)
++        {
++            std::fprintf(stderr, "stonefish_seed_v1: STONEFISH_SEED must be a decimal integer in [0, 4294967295], got '%s'\n", text);
++            std::abort();
++        }
++        seed = (value + stream) & 0xFFFFFFFFull;
++        source = "STONEFISH_SEED";
++    }
++    else
++    {
++        seed = device();
++        source = "random_device";
++    }
++    std::fprintf(stderr, "stonefish_seed_v1: %s noise seed %llu from %s\n", generator, seed, source);
++    std::fflush(stderr);
++    return static_cast<std::mt19937::result_type>(seed);
++}
++
+ std::random_device Sensor::randomDevice;
+-std::mt19937 Sensor::randomGenerator(randomDevice());
++std::mt19937 Sensor::randomGenerator(stonefishSeed("Sensor", 0, randomDevice));
+ 
+ Sensor::Sensor(std::string uniqueName, Scalar frequency)
+ {
