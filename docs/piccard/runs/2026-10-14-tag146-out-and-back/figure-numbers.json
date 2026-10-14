@@ -1,26 +1,17 @@
 {
+ "ate_horizontal_rmse_m": 0.08306630835137652,
+ "ate_horizontal_max_m": 0.1475946578698839,
+ "ate_horizontal_at_end_m": 0.09983894251268642,
+ "tag146_reprojected_from_ekf_pose_rmse_from_true_tag_m": 0.09566159707314521,
+ "tag146_reprojected_from_true_pose_rmse_from_true_tag_m": 0.03499324462406614,
  "sightings_146_front": 3237,
- "reproj_from_ekf": {
-  "sigma_m": 0.03253485131036185,
-  "max_m": 0.1694701717409719,
-  "median_offset_from_true_tag_m": 0.0830143574425063
- },
- "reproj_from_truth": {
-  "sigma_m": 0.029959249524142254,
-  "max_m": 0.2054021673456744,
-  "median_offset_from_true_tag_m": 0.0022517473234969173
- },
- "ekf_error_m": {
-  "p50": 0.08149551874749884,
-  "p90": 0.11735466643516289,
-  "max": 0.1475946578698839,
-  "at_end": 0.09983894251268642
- },
  "tag_out_interval_s": [
   244.855346492,
   401.136643501
  ],
  "camera_offset_fit_m": 0.682368930053149,
- "mission_s": 640.0,
- "seed": 910739171
+ "alignment": "EKF (controller world_ned frame) mapped to the Stonefish world by the transform recorded from the first cg_link sample (docking.json controller_frame_in_ground_truth); no least-squares alignment",
+ "frame": "Stonefish world: x north, y east, z down (NED); figure axes East (y) and North (x)",
+ "seed": 910739171,
+ "mission_s": 640.0
 }
